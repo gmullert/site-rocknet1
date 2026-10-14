@@ -8,9 +8,16 @@ interface FooterProps {
   content?: FrontendContent['footer'];
   onOpenAdmin: () => void;
   onOpenContract: () => void;
+  onOpenLegal?: (tab?: 'privacy' | 'terms') => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ settings, content, onOpenAdmin, onOpenContract }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  settings, 
+  content, 
+  onOpenAdmin, 
+  onOpenContract,
+  onOpenLegal,
+}) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -173,9 +180,27 @@ export const Footer: React.FC<FooterProps> = ({ settings, content, onOpenAdmin, 
 
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500">
-          <p>{copyrightText}</p>
+        {/* Bottom bar with Copyright & Legal Links */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <p>{copyrightText}</p>
+            <span className="hidden sm:inline text-neutral-700">·</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onOpenLegal?.('privacy')}
+                className="text-neutral-400 hover:text-cyan-400 underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                Privacidade & LGPD
+              </button>
+              <span className="text-neutral-700">·</span>
+              <button
+                onClick={() => onOpenLegal?.('terms')}
+                className="text-neutral-400 hover:text-cyan-400 underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                Termos de Adesão
+              </button>
+            </div>
+          </div>
           
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">

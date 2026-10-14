@@ -26,6 +26,7 @@ import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { ContractModal } from './components/ContractModal';
 import { AdminPanel } from './components/AdminPanel';
 import { AdminLoginModal } from './components/AdminLoginModal';
+import { LegalModal } from './components/LegalModal';
 
 export default function App() {
   // App state
@@ -43,6 +44,9 @@ export default function App() {
   
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms'>('privacy');
 
   // Initialize data on mount
   useEffect(() => {
@@ -71,6 +75,11 @@ export default function App() {
   const handleLoginSuccess = () => {
     setIsAdminLoginOpen(false);
     setIsAdminPanelOpen(true);
+  };
+
+  const handleOpenLegal = (tab: 'privacy' | 'terms' = 'privacy') => {
+    setLegalModalTab(tab);
+    setIsLegalModalOpen(true);
   };
 
   return (
@@ -144,6 +153,7 @@ export default function App() {
         content={frontendContent.footer}
         onOpenAdmin={handleOpenAdmin}
         onOpenContract={() => handleOpenContract()}
+        onOpenLegal={handleOpenLegal}
       />
 
       {/* Direct Floating WhatsApp Chat Button */}
@@ -157,6 +167,14 @@ export default function App() {
         dueDates={dueDates}
         onClose={() => setIsContractOpen(false)}
         onOrderCreated={() => setLeads(getStoredLeads())}
+        onOpenLegal={handleOpenLegal}
+      />
+
+      {/* Transparency & Legal Modal (LGPD & SCM Terms) */}
+      <LegalModal
+        isOpen={isLegalModalOpen}
+        initialTab={legalModalTab}
+        onClose={() => setIsLegalModalOpen(false)}
       />
 
       {/* Admin Login Modal */}

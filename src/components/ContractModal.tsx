@@ -11,6 +11,7 @@ interface ContractModalProps {
   dueDates?: string[];
   onClose: () => void;
   onOrderCreated?: () => void;
+  onOpenLegal?: (tab?: 'privacy' | 'terms') => void;
 }
 
 export const ContractModal: React.FC<ContractModalProps> = ({
@@ -20,6 +21,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   dueDates = ['05', '10', '15', '20', '25'],
   onClose,
   onOrderCreated,
+  onOpenLegal,
 }) => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [step, setStep] = useState<number>(1);
@@ -573,6 +575,29 @@ _Gostaria de confirmar o agendamento da instalação pelo site da Rocknet!_`;
                   <span className="text-neutral-400">Endereço:</span>
                   <span className="text-white">{street}, {number} - {neighborhood}</span>
                 </div>
+              </div>
+
+              {/* LGPD & Terms compliance note */}
+              <div className="p-3 rounded-xl bg-neutral-950/80 border border-neutral-800 text-[11px] text-neutral-400 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <p className="leading-snug">
+                  Seus dados serão tratados com segurança e sigilo conforme a{' '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenLegal?.('privacy')}
+                    className="text-cyan-400 hover:text-cyan-300 underline font-semibold cursor-pointer"
+                  >
+                    Política de Privacidade (LGPD)
+                  </button>{' '}
+                  e os{' '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenLegal?.('terms')}
+                    className="text-cyan-400 hover:text-cyan-300 underline font-semibold cursor-pointer"
+                  >
+                    Termos de Adesão
+                  </button>.
+                </p>
               </div>
 
               <div className="pt-4 flex items-center justify-between">
