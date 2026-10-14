@@ -37,7 +37,37 @@ export interface SiteSettings {
   logoMode?: 'image' | 'both' | 'icon'; // display mode
   logoTextPrimary?: string; // e.g. 'Rock'
   logoTextAccent?: string; // e.g. 'net'
+  faviconUrl?: string; // base64 data URL, server path, or external URL
 }
+
+export const applyFavicon = (faviconUrl?: string) => {
+  if (typeof document === 'undefined') return;
+  const href = faviconUrl && faviconUrl.trim() ? faviconUrl.trim() : '/favicon.svg';
+
+  let iconLink = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
+  if (!iconLink) {
+    iconLink = document.createElement('link');
+    iconLink.rel = 'icon';
+    document.head.appendChild(iconLink);
+  }
+  iconLink.href = href;
+
+  if (href.endsWith('.svg') || href.startsWith('data:image/svg+xml')) {
+    iconLink.type = 'image/svg+xml';
+  } else if (href.endsWith('.png') || href.startsWith('data:image/png')) {
+    iconLink.type = 'image/png';
+  } else if (href.endsWith('.ico') || href.startsWith('data:image/x-icon')) {
+    iconLink.type = 'image/x-icon';
+  }
+
+  let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
+  if (!appleLink) {
+    appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    document.head.appendChild(appleLink);
+  }
+  appleLink.href = href;
+};
 
 const STORAGE_KEYS = {
   PLANS: 'rocknet_plans_v2',
@@ -242,12 +272,14 @@ export const getStoredSettings = (): SiteSettings => {
     logoMode: 'both',
     logoTextPrimary: 'Rock',
     logoTextAccent: 'net',
+    faviconUrl: '',
   };
 };
 
 export const saveStoredSettings = (settings: SiteSettings) => {
   try {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    applyFavicon(settings.faviconUrl);
   } catch (err) {
     console.warn('Error saving settings to localStorage:', err);
   }
@@ -565,4 +597,113 @@ export const deleteAdminUser = (
 
   return { success: true };
 };
+
+export const updateAdminUser = (
+  editorUserId: string,
+  editorPasswordInput: string,
+  targetUserId: string,
+  data: {
+    name?: string;
+    username?: string;
+    role?: 'master' | 'admin';
+    newPassword?: string;
+  }
+): { success: boolean; error?: string; user?: AdminUser } => {
+  const users = getStoredAdminUsers();
+  const current = getCurrentAdminUser();
+  const cleanEditorId = (editorUserId || '').trim().toLowerCase();
+  const editor =
+    users.find(
+      (u) =>
+        u.id === editorUserId ||
+        u.username.toLowerCase() === cleanEditorId ||
+        u.id === current.id ||
+        u.username.toLowerCase() === current.username.toLowerCase()
+    ) || current;
+
+  // 1. Must have Master role
+  if (!editor || editor.role !== 'master') {
+    return { success: false, error: 'Apenas usuários com perfil Mestre têm permissão para editar outras contas.' };
+  }
+
+  // 2. Validate editor password (the master user performing the edit)
+  const cleanEditorPass = (editorPasswordInput || '').trim();
+  if (!cleanEditorPass) {
+    return { success: false, error: 'Por favor, digite a sua senha de Mestre para autorizar a alteração.' };
+  }
+  if (editor.password !== cleanEditorPass) {
+    return { 
+      success: false, 
+      error: `Senha incorreta do Usuário Mestre (@${editor.username}) que está editando. Nenhuma alteração foi salva.` 
+    };
+  }
+
+  // 3. Find target user
+  const target = users.find((u) => u.id === targetUserId || u.username.toLowerCase() === (targetUserId || '').toLowerCase());
+  if (!target) {
+    return { success: false, error: 'Conta de usuário não encontrada.' };
+  }
+
+  // 4. Validate name
+  const cleanName = data.name !== undefined ? data.name.trim() : target.name;
+  if (!cleanName) {
+    return { success: false, error: 'O nome do administrador não pode ficar em branco.' };
+  }
+
+  // 5. Validate username
+  const cleanUsername = data.username !== undefined 
+    ? data.username.trim().toLowerCase().replace(/\s+/g, '') 
+    : target.username;
+
+  if (!cleanUsername || cleanUsername.length < 3) {
+    return { success: false, error: 'O nome de usuário deve conter no mínimo 3 caracteres sem espaços.' };
+  }
+
+  // Check username uniqueness if changed
+  if (cleanUsername !== target.username.toLowerCase()) {
+    const exists = users.some(
+      (u) => u.id !== targetUserId && u.username.toLowerCase() === cleanUsername
+    );
+    if (exists) {
+      return { success: false, error: `O nome de usuário "@${cleanUsername}" já está em uso por outro administrador.` };
+    }
+  }
+
+  // 6. Role check (ensure not leaving 0 masters)
+  const newRole = data.role || target.role;
+  if (target.role === 'master' && newRole !== 'master') {
+    const masterCount = users.filter((u) => u.role === 'master').length;
+    if (masterCount <= 1) {
+      return { success: false, error: 'Não é possível remover o perfil do único Usuário Mestre do sistema.' };
+    }
+  }
+
+  // 7. Password update if provided
+  let newPassword = target.password;
+  if (data.newPassword && data.newPassword.trim().length > 0) {
+    if (data.newPassword.trim().length < 4) {
+      return { success: false, error: 'A nova senha deve ter no mínimo 4 caracteres.' };
+    }
+    newPassword = data.newPassword.trim();
+  }
+
+  const updatedTarget: AdminUser = {
+    ...target,
+    name: cleanName,
+    username: cleanUsername,
+    role: newRole,
+    password: newPassword,
+  };
+
+  const updatedUsers = users.map((u) => (u.id === targetUserId ? updatedTarget : u));
+  saveStoredAdminUsers(updatedUsers);
+
+  // If the edited user is the current session, refresh session
+  if (current.id === targetUserId) {
+    setCurrentAdminUser(updatedTarget);
+  }
+
+  return { success: true, user: updatedTarget };
+};
+
 

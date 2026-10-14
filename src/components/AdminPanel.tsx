@@ -18,7 +18,9 @@ import {
   setCurrentAdminUser,
   updateAdminPassword,
   createAdminUser,
-  deleteAdminUser
+  deleteAdminUser,
+  updateAdminUser,
+  applyFavicon
 } from '../services/storage';
 import { saveMediaAsset } from '../services/imageStorage';
 import { 
@@ -58,7 +60,8 @@ import {
   ShieldAlert,
   User,
   Lock,
-  LogOut
+  LogOut,
+  Globe
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -126,6 +129,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [switchTargetUser, setSwitchTargetUser] = useState<AdminUser | null>(null);
   const [switchPasswordInput, setSwitchPasswordInput] = useState('');
   const [switchPasswordError, setSwitchPasswordError] = useState<string | null>(null);
+
+  // Edit user account state (for Master user)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTargetUser, setEditingTargetUser] = useState<AdminUser | null>(null);
+  const [editUserForm, setEditUserForm] = useState({
+    name: '',
+    username: '',
+    role: 'admin' as 'master' | 'admin',
+    newPassword: '',
+  });
+  const [editFormError, setEditFormError] = useState<string | null>(null);
+
+  // Master confirmation password modal state for editing account
+  const [isEditConfirmModalOpen, setIsEditConfirmModalOpen] = useState(false);
+  const [editMasterPasswordInput, setEditMasterPasswordInput] = useState('');
+  const [editMasterPasswordError, setEditMasterPasswordError] = useState<string | null>(null);
 
   // Support image dropzone state
   const supportFileInputRef = useRef<HTMLInputElement>(null);
@@ -308,6 +327,71 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onUpdateSettings(updatedSettings);
     saveStoredSettings(updatedSettings);
     showToast('Logomarca personalizada removida. Restaurado ícone padrão!');
+  };
+
+  // Favicon Upload & Management Handlers
+  const handleFaviconFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !file.name.endsWith('.ico') && !file.name.endsWith('.svg')) {
+      showToast('Por favor, selecione um arquivo de ícone ou imagem válido (PNG, SVG, ICO, WebP, JPG).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        let finalUrl = result;
+
+        try {
+          const res = await fetch('/api/upload-favicon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataUrl: result }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.url) {
+              finalUrl = json.url;
+            }
+          }
+        } catch (err) {
+          console.warn('Server favicon upload error, using local fallback:', err);
+        }
+
+        const updatedSettings: SiteSettings = {
+          ...settingsForm,
+          faviconUrl: finalUrl,
+        };
+        setSettingsForm(updatedSettings);
+        onUpdateSettings(updatedSettings);
+        saveStoredSettings(updatedSettings);
+        applyFavicon(finalUrl);
+        showToast('Favicon atualizado com sucesso! A aba do navegador já foi atualizada.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFavicon = () => {
+    const updatedSettings: SiteSettings = {
+      ...settingsForm,
+      faviconUrl: '',
+    };
+    setSettingsForm(updatedSettings);
+    onUpdateSettings(updatedSettings);
+    saveStoredSettings(updatedSettings);
+    applyFavicon('/favicon.svg');
+    showToast('Favicon personalizado removido. Restaurado o ícone original da Rocknet!');
+  };
+
+  const handleSaveFavicon = () => {
+    onUpdateSettings(settingsForm);
+    saveStoredSettings(settingsForm);
+    applyFavicon(settingsForm.faviconUrl);
+    showToast('Favicon salvo com sucesso! Aba do navegador atualizada.');
   };
 
   const handleSaveBranding = (e?: React.FormEvent) => {
@@ -1030,6 +1114,112 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setSwitchPasswordError(null);
   };
 
+  // User Editing Handlers (for Master role)
+  const handleOpenEditUser = (user: AdminUser) => {
+    setEditingTargetUser(user);
+    setEditUserForm({
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      newPassword: '',
+    });
+    setEditFormError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCancelEditUser = () => {
+    setIsEditModalOpen(false);
+    setEditingTargetUser(null);
+    setEditFormError(null);
+    setEditUserForm({
+      name: '',
+      username: '',
+      role: 'admin',
+      newPassword: '',
+    });
+  };
+
+  const handleRequestConfirmEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTargetUser) return;
+
+    if (!editUserForm.name.trim()) {
+      setEditFormError('O nome do administrador é obrigatório.');
+      return;
+    }
+
+    const cleanUsername = editUserForm.username.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername || cleanUsername.length < 3) {
+      setEditFormError('O nome de usuário deve ter pelo menos 3 caracteres sem espaços.');
+      return;
+    }
+
+    if (editUserForm.newPassword && editUserForm.newPassword.trim().length > 0 && editUserForm.newPassword.trim().length < 4) {
+      setEditFormError('A nova senha deve ter no mínimo 4 caracteres.');
+      return;
+    }
+
+    // Check unique username if username was changed
+    if (cleanUsername !== editingTargetUser.username.toLowerCase()) {
+      const exists = adminUsers.some(
+        (u) => u.id !== editingTargetUser.id && u.username.toLowerCase() === cleanUsername
+      );
+      if (exists) {
+        setEditFormError(`O nome de usuário "@${cleanUsername}" já está em uso por outra conta.`);
+        return;
+      }
+    }
+
+    setEditFormError(null);
+    setEditMasterPasswordInput('');
+    setEditMasterPasswordError(null);
+    setIsEditConfirmModalOpen(true);
+  };
+
+  const handleExecuteEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTargetUser) return;
+
+    const res = updateAdminUser(
+      currentUser.id,
+      editMasterPasswordInput,
+      editingTargetUser.id,
+      {
+        name: editUserForm.name,
+        username: editUserForm.username,
+        role: editUserForm.role,
+        newPassword: editUserForm.newPassword,
+      }
+    );
+
+    if (!res.success) {
+      setEditMasterPasswordError(res.error || 'Senha incorreta. Não foi possível autorizar a alteração.');
+      return;
+    }
+
+    // Success! Update local lists
+    const updatedUsers = getStoredAdminUsers();
+    setAdminUsers(updatedUsers);
+
+    // Refresh current user session from storage
+    const activeUser = getCurrentAdminUser();
+    setCurrentUser(activeUser);
+
+    setIsEditConfirmModalOpen(false);
+    setIsEditModalOpen(false);
+    setEditingTargetUser(null);
+    setEditMasterPasswordInput('');
+    setEditMasterPasswordError(null);
+    setUserActionSuccess(`Conta @${res.user?.username} (${res.user?.name}) atualizada com sucesso pelo Mestre!`);
+    showToast(`Conta @${res.user?.username} atualizada com sucesso!`);
+  };
+
+  const handleCancelConfirmEdit = () => {
+    setIsEditConfirmModalOpen(false);
+    setEditMasterPasswordInput('');
+    setEditMasterPasswordError(null);
+  };
+
   const handleLogout = () => {
     setAdminAuthenticated(false);
     setCurrentAdminUser(null);
@@ -1124,7 +1314,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               }`}
             >
               <Image className="w-3.5 h-3.5" />
-              <span>Logomarca & Topo</span>
+              <span>Logomarca & Favicon</span>
             </button>
 
             <button
@@ -1493,6 +1683,177 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <span className="text-[10px] text-emerald-400 block mt-2">
                   ✓ Qualquer alteração reflete imediatamente no site ao salvar.
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD DE GESTÃO DO FAVICON (ÍCONE DA ABA DO NAVEGADOR) */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-neutral-900 via-neutral-900/90 to-blue-950/40 border border-blue-500/40 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-cyan-400 text-neutral-950 flex items-center justify-center font-bold shadow-lg shadow-blue-500/20">
+                  <Globe className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    Favicon da Aba do Navegador (Ícone da Aba)
+                    <span className="text-[10px] bg-blue-950 text-blue-400 border border-blue-700/60 px-2 py-0.5 rounded-full font-mono">
+                      Aba do Navegador
+                    </span>
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Cadastre e altere o ícone que aparece na aba do navegador, no favoritos e no atalho móvel dos clientes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {settingsForm.faviconUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveFavicon}
+                    className="px-3 py-1.5 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 border border-rose-900/60 rounded-xl transition-colors cursor-pointer"
+                    title="Restaurar o favicon SVG padrão da Rocknet"
+                  >
+                    Restaurar Padrão
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSaveFavicon}
+                  className="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md shadow-cyan-400/20 transition-all cursor-pointer active:scale-95"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Salvar Favicon</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Field Inputs Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              <div className="lg:col-span-7 space-y-3.5">
+                {/* 1. File Upload */}
+                <div>
+                  <label className="text-xs font-semibold text-neutral-200 block mb-1.5">
+                    1. Fazer upload do arquivo de Favicon (computador ou celular):
+                  </label>
+                  <label className="flex items-center gap-3 p-3.5 bg-neutral-950 border border-dashed border-neutral-700 hover:border-blue-400 rounded-xl cursor-pointer transition-colors group">
+                    <Upload className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <div className="text-xs">
+                      <span className="text-white font-medium block">
+                        Clique aqui para selecionar arquivo de Favicon
+                      </span>
+                      <span className="text-neutral-500 text-[11px]">
+                        Formatos aceitos: PNG (com fundo transparente), SVG, ICO, WebP ou JPG.
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/webp,image/jpeg"
+                      onChange={handleFaviconFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* 2. URL Input */}
+                <div>
+                  <label className="text-xs font-semibold text-neutral-200 block mb-1">
+                    2. Ou digite/cole o link direto (URL) do ícone:
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsForm.faviconUrl || ''}
+                    onChange={(e) => {
+                      const updated = { ...settingsForm, faviconUrl: e.target.value };
+                      setSettingsForm(updated);
+                      onUpdateSettings(updated);
+                      saveStoredSettings(updated);
+                      applyFavicon(e.target.value);
+                    }}
+                    placeholder="https://exemplo.com.br/meu-favicon.png ou /favicon.svg"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-xs text-white font-mono placeholder-neutral-600 focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+
+                <div className="p-3 bg-neutral-950/70 border border-neutral-800/80 rounded-xl text-[11px] text-neutral-400 space-y-1">
+                  <div className="flex items-center gap-1.5 text-blue-400 font-semibold">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Dicas para o melhor Favicon:</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    • <strong>Formato ideal:</strong> Quadrado (proporção 1:1, ex: 64x64, 128x128 ou 512x512 pixels).
+                  </p>
+                  <p className="leading-relaxed">
+                    • <strong>Fundo transparente:</strong> Imagens PNG ou SVG com fundo transparente garantem ótima legibilidade em abas claras ou escuras.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Realistic Browser Window & Tab Simulation */}
+              <div className="lg:col-span-5 bg-neutral-950 rounded-2xl p-4 border border-neutral-800/80 space-y-3">
+                <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+                  Simulação Real na Aba do Navegador:
+                </span>
+
+                {/* Browser Window Mockup */}
+                <div className="rounded-xl bg-[#1e1e1e] border border-neutral-700/80 shadow-2xl overflow-hidden text-left">
+                  {/* Browser Top Bar with 3 dots */}
+                  <div className="bg-[#121212] px-3 py-2 flex items-center justify-between border-b border-neutral-800">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block"></span>
+                    </div>
+                    <span className="text-[10px] text-neutral-500 font-mono">Navegador</span>
+                    <div className="w-8"></div>
+                  </div>
+
+                  {/* Browser Tab Header */}
+                  <div className="bg-[#181818] px-2 pt-2 flex items-center gap-1 border-b border-neutral-800">
+                    {/* Active Tab */}
+                    <div className="bg-[#242424] text-white px-3 py-1.5 rounded-t-lg flex items-center gap-2 border-t border-x border-neutral-700 max-w-[210px] shadow-sm">
+                      <img
+                        src={settingsForm.faviconUrl || '/favicon.svg'}
+                        alt="Favicon da Aba"
+                        className="w-4 h-4 object-contain rounded-sm shrink-0 bg-neutral-900/50"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/favicon.svg';
+                        }}
+                      />
+                      <span className="text-[11px] font-medium truncate">
+                        Rocknet Telecom - Fibra
+                      </span>
+                      <X className="w-3 h-3 text-neutral-400 shrink-0 ml-auto hover:text-white" />
+                    </div>
+
+                    <div className="text-neutral-500 px-2 text-xs select-none">+</div>
+                  </div>
+
+                  {/* Address Bar */}
+                  <div className="p-2.5 bg-[#202020] border-b border-neutral-800 flex items-center gap-2">
+                    <div className="flex-1 bg-[#141414] rounded-lg px-2.5 py-1 text-[11px] text-neutral-300 flex items-center gap-1.5 font-mono border border-neutral-800">
+                      <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="text-emerald-400 font-semibold">https://</span>
+                      <span className="truncate">rocknet.com.br</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] pt-1">
+                  <span className="text-neutral-400">Status atual:</span>
+                  {settingsForm.faviconUrl ? (
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Favicon Personalizado Ativo
+                    </span>
+                  ) : (
+                    <span className="text-cyan-400 font-medium flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Favicon Padrão Rocknet (SVG)
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -4682,40 +5043,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                         </div>
 
-                        <div className="pt-3 mt-3 border-t border-neutral-800/60 flex items-center justify-between">
+                        <div className="pt-3 mt-3 border-t border-neutral-800/60 flex items-center justify-between flex-wrap gap-2">
                           <span className="text-[10px] text-neutral-500">
                             {isSelf ? 'Sua conta conectada' : user.role === 'master' ? 'Acesso Mestre Total' : 'Acesso de Gestão'}
                           </span>
 
-                          {canDelete ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteAdminUser(user.id, user.name);
-                              }}
-                              className="px-2.5 py-1 text-red-400 hover:text-white bg-red-950/40 hover:bg-red-600 border border-red-900/60 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95"
-                              title="Remover esta conta de acesso"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Remover Conta</span>
-                            </button>
-                          ) : isSelf ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-cyan-400 font-medium">Ativo agora</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Master user can edit other accounts */}
+                            {(currentUser.role === 'master' || getCurrentAdminUser().role === 'master') && (
                               <button
                                 type="button"
-                                onClick={handleLogout}
-                                className="px-2 py-0.5 text-[11px] text-red-400 hover:text-white bg-red-950/40 hover:bg-red-600 border border-red-900/60 rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
-                                title="Desconectar desta conta"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditUser(user);
+                                }}
+                                className="px-2.5 py-1 text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-600 border border-cyan-800/60 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                                title={`Editar dados e permissões da conta @${user.username}`}
                               >
-                                <LogOut className="w-3 h-3" />
-                                <span>Sair</span>
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Editar</span>
                               </button>
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-neutral-600 font-medium">Protegido</span>
-                          )}
+                            )}
+
+                            {canDelete ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAdminUser(user.id, user.name);
+                                }}
+                                className="px-2.5 py-1 text-red-400 hover:text-white bg-red-950/40 hover:bg-red-600 border border-red-900/60 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95"
+                                title="Remover esta conta de acesso"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remover</span>
+                              </button>
+                            ) : isSelf ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-cyan-400 font-medium">Ativo agora</span>
+                                <button
+                                  type="button"
+                                  onClick={handleLogout}
+                                  className="px-2 py-0.5 text-[11px] text-red-400 hover:text-white bg-red-950/40 hover:bg-red-600 border border-red-900/60 rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                                  title="Desconectar desta conta"
+                                >
+                                  <LogOut className="w-3 h-3" />
+                                  <span>Sair</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-neutral-600 font-medium">Protegido</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -4832,6 +5211,243 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-cyan-400/20 active:scale-95 cursor-pointer"
                 >
                   Trocar de Conta
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: FORMULÁRIO DE EDIÇÃO DE CONTA (EXCLUSIVO MESTRE) */}
+      {isEditModalOpen && editingTargetUser && (
+        <div 
+          className="fixed inset-0 z-[65] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={handleCancelEditUser}
+        >
+          <div 
+            className="relative w-full max-w-lg bg-neutral-900 border border-neutral-700/80 rounded-3xl p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 text-left max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={handleCancelEditUser}
+              className="absolute top-5 right-5 p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0">
+                <Edit3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                  Editar Conta de Administrador
+                  <span className="text-[10px] bg-amber-950 text-amber-300 border border-amber-800/80 px-2 py-0.5 rounded font-mono">
+                    Permissão Mestre
+                  </span>
+                </h4>
+                <p className="text-xs text-neutral-400">
+                  Alterando dados de @{editingTargetUser.username}
+                </p>
+              </div>
+            </div>
+
+            {/* Edit Form */}
+            <form onSubmit={handleRequestConfirmEdit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Nome Completo
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                  <input
+                    type="text"
+                    required
+                    value={editUserForm.name}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                    placeholder="Nome completo do usuário"
+                    className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Nome de Usuário (@login)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono text-sm">@</span>
+                  <input
+                    type="text"
+                    required
+                    value={editUserForm.username}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
+                    placeholder="nome_usuario"
+                    className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl pl-8 pr-4 py-2.5 text-sm text-white font-mono focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Nível de Acesso (Cargo)
+                </label>
+                <select
+                  value={editUserForm.role}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value as 'master' | 'admin' })}
+                  className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none transition-colors cursor-pointer"
+                >
+                  <option value="admin">Administrador (Gerencia planos, leads e ferramentas)</option>
+                  <option value="master">Usuário Mestre (Permissão Total + Criar/Editar/Excluir Contas)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Redefinir Senha da Conta (Opcional)
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                  <input
+                    type="password"
+                    value={editUserForm.newPassword}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, newPassword: e.target.value })}
+                    placeholder="Deixe em branco para manter a senha atual"
+                    className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
+                  />
+                </div>
+                <p className="text-[11px] text-neutral-500 mt-1">
+                  Se você preencher este campo, a senha de @{editingTargetUser.username} será atualizada para o novo valor.
+                </p>
+              </div>
+
+              {editFormError && (
+                <div className="p-3 bg-red-950/50 border border-red-800/80 rounded-xl text-red-300 text-xs flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{editFormError}</span>
+                </div>
+              )}
+
+              <div className="p-3 bg-neutral-950/80 border border-neutral-800 rounded-xl text-[11px] text-neutral-400 leading-relaxed">
+                <span className="text-cyan-400 font-semibold block mb-0.5">Autorização de Segurança:</span>
+                Ao clicar em <strong>Concluir</strong>, abrirá um modal solicitando a senha do usuário que está editando (@{currentUser.username}) para validar as alterações.
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleCancelEditUser}
+                  className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-cyan-400/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Concluir</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: CONFIRMAÇÃO DE SENHA DO MESTRE (AUTORIZAÇÃO) */}
+      {isEditConfirmModalOpen && editingTargetUser && (
+        <div 
+          className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={handleCancelConfirmEdit}
+        >
+          <div 
+            className="relative w-full max-w-md bg-neutral-900 border border-cyan-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={handleCancelConfirmEdit}
+              className="absolute top-5 right-5 p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                <Lock className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-white tracking-tight">
+                  Autorização do Usuário Mestre
+                </h4>
+                <p className="text-xs text-neutral-400">
+                  Digite a senha do usuário que está editando para concluir
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 mb-4 text-xs space-y-1.5">
+              <div className="flex justify-between items-center text-neutral-300">
+                <span className="text-neutral-500">Conta sendo editada:</span>
+                <span className="font-mono font-bold text-cyan-400">@{editingTargetUser.username} ({editingTargetUser.name})</span>
+              </div>
+              <div className="flex justify-between items-center text-neutral-300">
+                <span className="text-neutral-500">Usuário que está editando:</span>
+                <span className="font-mono font-bold text-white">@{currentUser.username} ({currentUser.name})</span>
+              </div>
+            </div>
+
+            {/* Password verification form */}
+            <form onSubmit={handleExecuteEditUser} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Senha do usuário que está editando (@{currentUser.username}) *
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                  <input
+                    type="password"
+                    required
+                    autoFocus
+                    value={editMasterPasswordInput}
+                    onChange={(e) => {
+                      setEditMasterPasswordInput(e.target.value);
+                      setEditMasterPasswordError(null);
+                    }}
+                    placeholder={`Digite a senha de @${currentUser.username}`}
+                    className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {editMasterPasswordError && (
+                <div className="p-3 bg-red-950/50 border border-red-800/80 rounded-xl text-red-300 text-xs flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{editMasterPasswordError}</span>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleCancelConfirmEdit}
+                  className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-cyan-400/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Concluir e Salvar</span>
                 </button>
               </div>
             </form>

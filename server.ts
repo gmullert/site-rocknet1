@@ -65,6 +65,47 @@ app.post('/api/upload-support-image', (req, res) => {
   }
 });
 
+app.post('/api/upload-favicon', (req, res) => {
+  const { dataUrl } = req.body;
+  if (!dataUrl || typeof dataUrl !== 'string') {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+  }
+  try {
+    const matches = dataUrl.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (!matches) {
+      return res.status(400).json({ error: 'Formato de arquivo inválido. Envie PNG, SVG, ICO, JPG ou WebP.' });
+    }
+    let ext = matches[1].toLowerCase();
+    if (ext.includes('svg')) ext = 'svg';
+    else if (ext.includes('png')) ext = 'png';
+    else if (ext.includes('ico') || ext.includes('icon')) ext = 'ico';
+    else if (ext.includes('webp')) ext = 'webp';
+    else if (ext.includes('jpeg') || ext.includes('jpg')) ext = 'jpg';
+    else ext = 'png';
+
+    const buffer = Buffer.from(matches[2], 'base64');
+    const filename = `custom-favicon.${ext}`;
+    const publicDir = path.resolve(__dirname, 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    const filePath = path.resolve(publicDir, filename);
+    fs.writeFileSync(filePath, buffer);
+
+    const distDir = path.resolve(__dirname, 'dist');
+    if (fs.existsSync(distDir)) {
+      try {
+        fs.writeFileSync(path.resolve(distDir, filename), buffer);
+      } catch {}
+    }
+
+    const cacheBustUrl = `/${filename}?t=${Date.now()}`;
+    return res.json({ success: true, url: cacheBustUrl });
+  } catch (err) {
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
 async function start() {
   const httpServer = http.createServer(app);
 

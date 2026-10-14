@@ -11,6 +11,7 @@ import {
   isAdminAuthenticated,
   LeadOrder,
   SiteSettings,
+  applyFavicon,
 } from './services/storage';
 
 import { Navbar } from './components/Navbar';
@@ -55,9 +56,16 @@ export default function App() {
     setCoverage(getStoredCoverage());
     setLeads(getStoredLeads());
     setDueDates(getStoredDueDates());
-    setSettings(getStoredSettings());
+    const initialSettings = getStoredSettings();
+    setSettings(initialSettings);
+    applyFavicon(initialSettings.faviconUrl);
     setFrontendContent(getStoredFrontendContent());
   }, []);
+
+  // Sync favicon whenever settings change
+  useEffect(() => {
+    applyFavicon(settings.faviconUrl);
+  }, [settings.faviconUrl]);
 
   const handleOpenContract = (plan?: Plan | null) => {
     setSelectedPlanForContract(plan || null);
