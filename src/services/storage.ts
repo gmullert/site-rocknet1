@@ -375,7 +375,9 @@ export const getCurrentAdminUser = (): AdminUser => {
     const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_ADMIN_USER);
     if (raw) {
       const parsed = JSON.parse(raw);
-      const found = users.find((u) => u.id === parsed.id || u.username === parsed.username);
+      const found = users.find(
+        (u) => u.id === parsed.id || u.username.toLowerCase() === (parsed.username || '').toLowerCase()
+      );
       if (found) return found;
     }
   } catch (e) {
@@ -387,10 +389,17 @@ export const getCurrentAdminUser = (): AdminUser => {
 };
 
 export const setCurrentAdminUser = (user: AdminUser | null) => {
-  if (user) {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_ADMIN_USER, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_ADMIN_USER);
+  try {
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ADMIN_USER, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_ADMIN_USER);
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('rocknet_admin_user_changed', { detail: user }));
+    }
+  } catch (err) {
+    console.warn('Error setting current admin user:', err);
   }
 };
 
@@ -398,43 +407,48 @@ export const authenticateAdmin = (
   usernameInput: string,
   passwordInput: string
 ): { success: boolean; user?: AdminUser; error?: string } => {
-  const cleanUsername = usernameInput.trim().toLowerCase();
-  const cleanPassword = passwordInput.trim();
+  const cleanUsername = (usernameInput || '').trim().toLowerCase();
+  const cleanPassword = (passwordInput || '').trim();
+
+  if (!cleanUsername) {
+    return { success: false, error: 'Por favor, informe o nome de usuário cadastrado.' };
+  }
+
+  if (!cleanPassword) {
+    return { success: false, error: 'Por favor, digite a sua senha de acesso.' };
+  }
+
   const users = getStoredAdminUsers();
 
-  // 1. Try username + password match
-  let matched = users.find(
-    (u) => u.username.toLowerCase() === cleanUsername && u.password === cleanPassword
+  // Find user by exact username (case-insensitive)
+  const targetUser = users.find(
+    (u) => u.username.toLowerCase() === cleanUsername
   );
 
-  // 2. Convenience: if user only typed password in a single field or typed master password
-  if (!matched && (!cleanUsername || cleanUsername === 'admin' || cleanUsername === 'master')) {
-    matched = users.find((u) => u.password === cleanPassword);
+  if (!targetUser) {
+    return { success: false, error: 'Usuário não encontrado. Verifique o usuário cadastrado.' };
   }
 
-  // 3. Fallback for legacy passwords
-  if (!matched && (cleanPassword === 'rocknet2026' || cleanPassword === 'rocknet')) {
-    matched = users.find((u) => u.role === 'master') || users[0];
+  // Strictly verify that the password matches THIS specific user's registered password
+  if (targetUser.password !== cleanPassword) {
+    return { success: false, error: 'Senha incorreta para o usuário informado.' };
   }
 
-  if (matched) {
-    // Update lastLogin
-    const nowStr = new Date().toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const updatedUsers = users.map((u) => (u.id === matched!.id ? { ...u, lastLogin: nowStr } : u));
-    saveStoredAdminUsers(updatedUsers);
-    const updatedUser = { ...matched, lastLogin: nowStr };
-    setAdminAuthenticated(true);
-    setCurrentAdminUser(updatedUser);
-    return { success: true, user: updatedUser };
-  }
+  // Update lastLogin for this specific user
+  const nowStr = new Date().toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const updatedUsers = users.map((u) => (u.id === targetUser.id ? { ...u, lastLogin: nowStr } : u));
+  saveStoredAdminUsers(updatedUsers);
+  const updatedUser = { ...targetUser, lastLogin: nowStr };
 
-  return { success: false, error: 'Usuário ou senha incorretos.' };
+  setAdminAuthenticated(true);
+  setCurrentAdminUser(updatedUser);
+  return { success: true, user: updatedUser };
 };
 
 export const updateAdminPassword = (

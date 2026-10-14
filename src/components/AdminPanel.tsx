@@ -121,6 +121,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [userActionError, setUserActionError] = useState<string | null>(null);
   const [userActionSuccess, setUserActionSuccess] = useState<string | null>(null);
 
+  // Switch account with password confirmation modal state
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [switchTargetUser, setSwitchTargetUser] = useState<AdminUser | null>(null);
+  const [switchPasswordInput, setSwitchPasswordInput] = useState('');
+  const [switchPasswordError, setSwitchPasswordError] = useState<string | null>(null);
+
   // Support image dropzone state
   const supportFileInputRef = useRef<HTMLInputElement>(null);
   const [isSupportDragging, setIsSupportDragging] = useState(false);
@@ -209,6 +215,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     setSettingsForm({ ...settings });
   }, [settings]);
+
+  // Synchronize current user and user list whenever the panel opens or user session changes
+  useEffect(() => {
+    if (isOpen) {
+      const active = getCurrentAdminUser();
+      setCurrentUser(active);
+      setAdminUsers(getStoredAdminUsers());
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleUserChanged = () => {
+      const active = getCurrentAdminUser();
+      setCurrentUser(active);
+      setAdminUsers(getStoredAdminUsers());
+    };
+    window.addEventListener('rocknet_admin_user_changed', handleUserChanged);
+    return () => window.removeEventListener('rocknet_admin_user_changed', handleUserChanged);
+  }, []);
 
   // Auto-scroll content area to top whenever active tab changes
   const contentScrollRef = useRef<HTMLDivElement>(null);
@@ -959,12 +984,50 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showToast('Senha alterada com sucesso!');
   };
 
-  const handleSwitchDemoUser = (user: AdminUser) => {
-    setCurrentAdminUser(user);
-    setCurrentUser(user);
+  const handleInitiateSwitchUser = (user: AdminUser) => {
+    if (currentUser.id === user.id || currentUser.username.toLowerCase() === user.username.toLowerCase()) {
+      showToast(`Você já está conectado como @${user.username}.`);
+      return;
+    }
+    setSwitchTargetUser(user);
+    setSwitchPasswordInput('');
+    setSwitchPasswordError(null);
+    setIsSwitchModalOpen(true);
+  };
+
+  const handleConfirmSwitchUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!switchTargetUser) return;
+
+    const cleanPass = switchPasswordInput.trim();
+    if (!cleanPass) {
+      setSwitchPasswordError('Por favor, digite a senha da conta.');
+      return;
+    }
+
+    // Strictly verify password against this target user's registered password
+    if (switchTargetUser.password !== cleanPass) {
+      setSwitchPasswordError(`Senha incorreta para a conta @${switchTargetUser.username}. Permanece na conta atual.`);
+      return;
+    }
+
+    // Password matches! Switch session to this user
+    setCurrentAdminUser(switchTargetUser);
+    setCurrentUser(switchTargetUser);
+    setIsSwitchModalOpen(false);
+    setSwitchTargetUser(null);
+    setSwitchPasswordInput('');
+    setSwitchPasswordError(null);
     setUserActionError(null);
-    setUserActionSuccess(`Sessão alterada para @${user.username} (${user.role === 'master' ? 'Usuário Mestre' : 'Administrador'}).`);
-    showToast(`Agora logado como @${user.username}`);
+    setUserActionSuccess(`Sessão alterada com sucesso para @${switchTargetUser.username} (${switchTargetUser.role === 'master' ? 'Usuário Mestre' : 'Administrador'}).`);
+    showToast(`Agora logado como @${switchTargetUser.username}!`);
+  };
+
+  const handleCancelSwitchUser = () => {
+    setIsSwitchModalOpen(false);
+    setSwitchTargetUser(null);
+    setSwitchPasswordInput('');
+    setSwitchPasswordError(null);
   };
 
   const handleLogout = () => {
@@ -1002,7 +1065,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Active Connected User Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs shadow-inner">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-400 text-[11px] hidden sm:inline">Conectado:</span>
+                <span className="font-mono font-bold text-white text-xs">@{currentUser?.username || 'admin'}</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase ${
+                  currentUser?.role === 'master' 
+                    ? 'bg-amber-950 text-amber-300 border border-amber-800/80' 
+                    : 'bg-cyan-950 text-cyan-300 border border-cyan-800/80'
+                }`}>
+                  {currentUser?.role === 'master' ? 'Mestre' : 'Admin'}
+                </span>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={handleLogout}
@@ -4246,21 +4328,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 {/* Current Logged In Profile Badge & Logout Action */}
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
-                  <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs shadow-inner">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
+                  <div className="flex items-center gap-3 px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs shadow-inner">
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
                     <div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-neutral-400">Logado como:</span>
-                        <span className="text-white font-bold font-mono">@{currentUser.username}</span>
+                        <span className="text-white font-bold font-mono text-xs">@{currentUser?.username || 'admin'}</span>
+                        {currentUser?.name && (
+                          <span className="text-neutral-300 font-medium text-[11px]">({currentUser.name})</span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold uppercase ${
-                          currentUser.role === 'master' 
+                          currentUser?.role === 'master' 
                             ? 'bg-amber-950 text-amber-300 border border-amber-800/80' 
                             : 'bg-cyan-950 text-cyan-300 border border-cyan-800/80'
                         }`}>
-                          {currentUser.role === 'master' ? 'Usuário Mestre' : 'Administrador'}
+                          {currentUser?.role === 'master' ? 'Usuário Mestre' : 'Administrador'}
                         </span>
+                        <span className="text-[10px] text-emerald-400 font-medium">● Conectado agora</span>
                       </div>
                     </div>
                   </div>
@@ -4510,21 +4599,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </p>
                   </div>
 
-                  {/* Switch demo account helper */}
+                  {/* Switch account selector - requires corresponding account password */}
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="text-neutral-500 hidden sm:inline">Alternar conta para testes:</span>
-                    <div className="flex gap-1.5">
+                    <span className="text-neutral-400 hidden sm:inline">Alternar conta:</span>
+                    <div className="flex gap-1.5 flex-wrap">
                       {adminUsers.map((u) => (
                         <button
                           key={u.id}
                           type="button"
-                          onClick={() => handleSwitchDemoUser(u)}
+                          onClick={() => handleInitiateSwitchUser(u)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
                             currentUser.id === u.id
                               ? 'bg-cyan-400 text-neutral-950 shadow-sm'
-                              : 'bg-neutral-950 text-neutral-300 hover:text-white border border-neutral-800'
+                              : 'bg-neutral-950 text-neutral-300 hover:text-white border border-neutral-800 hover:border-cyan-500/50'
                           }`}
-                          title={`Logar como @${u.username}`}
+                          title={`Trocar para @${u.username} (solicita senha)`}
                         >
                           @{u.username}
                         </button>
@@ -4640,6 +4729,115 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
 
       </div>
+
+      {/* MODAL EXCLUSIVO DE CONFIRMAÇÃO DE SENHA PARA TROCA DE CONTA */}
+      {isSwitchModalOpen && switchTargetUser && (
+        <div 
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={handleCancelSwitchUser}
+        >
+          <div 
+            className="relative w-full max-w-md bg-neutral-900 border border-neutral-700/80 rounded-3xl p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={handleCancelSwitchUser}
+              className="absolute top-5 right-5 p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0">
+                <KeyRound className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-white tracking-tight">
+                  Confirmar Troca de Conta
+                </h4>
+                <p className="text-xs text-neutral-400">
+                  Digite a senha da conta selecionada para autorizar a troca
+                </p>
+              </div>
+            </div>
+
+            {/* Target Account Info */}
+            <div className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-cyan-400 text-neutral-950 flex items-center justify-center font-bold text-xs">
+                  {switchTargetUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white leading-tight">
+                    {switchTargetUser.name}
+                  </p>
+                  <p className="font-mono text-cyan-400 text-[11px]">
+                    @{switchTargetUser.username}
+                  </p>
+                </div>
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase ${
+                switchTargetUser.role === 'master' 
+                  ? 'bg-amber-950 text-amber-300 border border-amber-800/80' 
+                  : 'bg-cyan-950 text-cyan-300 border border-cyan-800/80'
+              }`}>
+                {switchTargetUser.role === 'master' ? 'Mestre' : 'Admin'}
+              </span>
+            </div>
+
+            {/* Form with single password field */}
+            <form onSubmit={handleConfirmSwitchUser} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
+                  Senha da conta @{switchTargetUser.username}
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                  <input
+                    type="password"
+                    required
+                    autoFocus
+                    value={switchPasswordInput}
+                    onChange={(e) => {
+                      setSwitchPasswordInput(e.target.value);
+                      setSwitchPasswordError(null);
+                    }}
+                    placeholder={`Digite a senha de @${switchTargetUser.username}`}
+                    className="w-full bg-neutral-950 border border-neutral-700 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {switchPasswordError && (
+                <div className="p-3 bg-red-950/50 border border-red-800/80 rounded-xl text-red-300 text-xs flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{switchPasswordError}</span>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleCancelSwitchUser}
+                  className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-cyan-400/20 active:scale-95 cursor-pointer"
+                >
+                  Trocar de Conta
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

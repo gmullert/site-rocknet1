@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Lock, X, Shield, ArrowRight, KeyRound, User, CheckCircle2 } from 'lucide-react';
-import { authenticateAdmin, setAdminAuthenticated, getStoredAdminUsers, setCurrentAdminUser } from '../services/storage';
+import React, { useState, useEffect } from 'react';
+import { Lock, X, ArrowRight, KeyRound, User } from 'lucide-react';
+import { authenticateAdmin } from '../services/storage';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -17,9 +17,15 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setUsername('');
+      setPassword('');
+      setErrorMessage(null);
+    }
+  }, [isOpen]);
 
-  const users = getStoredAdminUsers();
+  if (!isOpen) return null;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,21 +38,6 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
     } else {
       setErrorMessage(result.error || 'Credenciais inválidas. Verifique usuário e senha.');
     }
-  };
-
-  const handleQuickDemoEnter = (selectedUsername?: string) => {
-    const targetUser = selectedUsername 
-      ? users.find(u => u.username === selectedUsername) 
-      : users.find(u => u.role === 'master') || users[0];
-    
-    if (targetUser) {
-      setAdminAuthenticated(true);
-      setCurrentAdminUser(targetUser);
-    } else {
-      setAdminAuthenticated(true);
-    }
-    setErrorMessage(null);
-    onSuccess();
   };
 
   return (
@@ -82,12 +73,14 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
               <input
                 type="text"
+                required
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder="Ex: master ou admin"
+                autoComplete="username"
+                placeholder="Digite seu usuário (ex: master ou admin)"
                 className="w-full bg-neutral-950 border border-neutral-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
                 autoFocus
               />
@@ -108,6 +101,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
                   setPassword(e.target.value);
                   setErrorMessage(null);
                 }}
+                autoComplete="current-password"
                 placeholder="Digite a sua senha de acesso"
                 className="w-full bg-neutral-950 border border-neutral-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
               />
@@ -122,34 +116,11 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
 
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-cyan-400/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer mt-2"
+            className="w-full py-3.5 px-4 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-cyan-400/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer mt-3"
           >
             <span>Entrar no Painel</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-
-          {/* Quick accounts username autofill */}
-          <div className="pt-2 border-t border-neutral-800 space-y-2">
-            <p className="text-[11px] text-neutral-400 text-center font-medium">
-              Selecionar usuário cadastrado:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {users.slice(0, 4).map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => setUsername(u.username)}
-                  className="py-2 px-2.5 bg-neutral-800/90 hover:bg-neutral-700/90 border border-neutral-700/60 rounded-xl text-xs text-neutral-200 flex items-center justify-between cursor-pointer transition-colors"
-                  title={`Preencher usuário @${u.username}`}
-                >
-                  <span className="font-mono text-cyan-300 font-semibold truncate">@{u.username}</span>
-                  <span className="text-[10px] text-neutral-400 px-1 py-0.5 bg-neutral-900 rounded uppercase">
-                    {u.role === 'master' ? 'Mestre' : 'Admin'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         </form>
 
         <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl text-[11px] text-center text-neutral-400 mt-4 leading-relaxed">

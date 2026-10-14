@@ -186,6 +186,7 @@ export default function App() {
 
       {/* Admin Management Panel */}
       <AdminPanel
+        key={isAdminPanelOpen ? 'admin-open' : 'admin-closed'}
         isOpen={isAdminPanelOpen}
         onClose={() => setIsAdminPanelOpen(false)}
         plans={plans}
