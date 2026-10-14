@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { CoverageArea, FrontendContent } from '../types';
 import { ROCKNET_INFO } from '../data/content';
-import { MapPin, Search, CheckCircle, Clock, Send, ShieldAlert, ArrowUpRight, X, Sparkles } from 'lucide-react';
+import { MapPin, CheckCircle, Clock, Send, ArrowUpRight, X } from 'lucide-react';
 
 interface CoverageSectionProps {
   coverageAreas: CoverageArea[];
@@ -190,39 +190,41 @@ export const CoverageSection: React.FC<CoverageSectionProps> = ({
                 <div
                   key={area.id}
                   onClick={() => setSelectedArea(area)}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+                  className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                     selectedArea?.id === area.id
                       ? 'bg-neutral-900 border-cyan-400 ring-1 ring-cyan-400 shadow-lg shadow-cyan-950/40'
                       : 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
-                        Zona {area.zone}
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div>
+                        <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
+                          Zona {area.zone}
+                        </span>
+                        <h4 className="text-base font-bold text-white mt-0.5">
+                          {area.name}
+                        </h4>
+                      </div>
+                      
+                      {/* Status indicator */}
+                      <span className={`text-[11px] font-semibold flex items-center gap-1 shrink-0 ${
+                        isAvail ? 'text-emerald-400' : isDemand ? 'text-amber-400' : 'text-cyan-400'
+                      }`}>
+                        {isAvail ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        <span>{area.statusLabel}</span>
                       </span>
-                      <h4 className="text-base font-bold text-white mt-0.5">
-                        {area.name}
-                      </h4>
                     </div>
-                    
-                    {/* Status indicator */}
-                    <span className={`text-[11px] font-semibold flex items-center gap-1 ${
-                      isAvail ? 'text-emerald-400' : isDemand ? 'text-amber-400' : 'text-cyan-400'
-                    }`}>
-                      {isAvail ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                      <span>{area.statusLabel}</span>
-                    </span>
-                  </div>
 
-                  <div className="space-y-1.5 text-xs text-neutral-300 mb-4 border-t border-neutral-800/80 pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-neutral-500">Prazo de Instalação:</span>
-                      <span className="font-medium text-white">{area.installationTime}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-500">Estrutura:</span>
-                      <span className="font-medium text-neutral-300">{area.fiberType}</span>
+                    <div className="space-y-1.5 text-xs text-neutral-300 mb-4 border-t border-neutral-800/80 pt-3">
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Prazo de Instalação:</span>
+                        <span className="font-medium text-white">{area.installationTime}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Estrutura:</span>
+                        <span className="font-medium text-neutral-300">{area.fiberType}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -231,7 +233,7 @@ export const CoverageSection: React.FC<CoverageSectionProps> = ({
                       e.stopPropagation();
                       handleConsultWhatsApp(area.name);
                     }}
-                    className="w-full py-2 px-3 rounded-lg bg-neutral-800 hover:bg-emerald-600/30 text-neutral-200 hover:text-emerald-300 border border-neutral-700/60 hover:border-emerald-500/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    className="w-full py-2.5 px-3 rounded-xl bg-neutral-800 hover:bg-emerald-600/30 text-neutral-200 hover:text-emerald-300 border border-neutral-700/60 hover:border-emerald-500/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                   >
                     <span>Pedir Ligação neste Bairro</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -271,22 +273,6 @@ export const CoverageSection: React.FC<CoverageSectionProps> = ({
             </div>
           </div>
         )}
-
-        {/* Notice for rural areas and non-listed streets */}
-        <div className="mt-10 p-5 rounded-xl bg-neutral-900/40 border border-neutral-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
-          <div className="flex items-center gap-3">
-            <ShieldAlert className="w-5 h-5 text-cyan-400 shrink-0" />
-            <p>
-              Mora na zona rural, sítio ou rua recém-aberta de Camilos? Realizamos projetos especiais de extensão de fibra dedicada para atender sua residência ou empresa.
-            </p>
-          </div>
-          <button
-            onClick={() => handleConsultWhatsApp('projeto especial / zona rural')}
-            className="text-cyan-400 hover:text-cyan-300 font-bold whitespace-nowrap hover:underline cursor-pointer"
-          >
-            Falar com Projetista de Rede →
-          </button>
-        </div>
 
       </div>
     </section>
