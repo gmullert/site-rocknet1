@@ -86,11 +86,13 @@ export interface FrontendContent {
   navbar: {
     ctaText: string;
     plansLinkText: string;
+    aboutLinkText?: string;
     toolsLinkText: string;
     coverageLinkText: string;
     supportLinkText: string;
     instagramLinkText: string;
   };
+  aboutSection?: AboutCompanyContent;
   hero: {
     topBadge: string;
     title: string;
@@ -161,4 +163,41 @@ export interface FrontendContent {
     email: string;
     copyrightText: string;
   };
+}
+
+export interface CompanyStat {
+  value: string;
+  label: string;
+  sublabel?: string;
+}
+
+export interface CompanyDifferential {
+  title: string;
+  desc: string;
+}
+
+export interface AboutCompanyContent {
+  enabled: boolean;
+  navLinkText: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  historyParagraph1: string;
+  historyParagraph2: string;
+  historyParagraph3: string;
+  quoteText?: string;
+  quoteAuthor?: string;
+  missionTitle: string;
+  missionDesc: string;
+  visionTitle: string;
+  visionDesc: string;
+  valuesTitle: string;
+  valuesDesc: string;
+  stats: CompanyStat[];
+  differentials: CompanyDifferential[];
+  imageUrl?: string;
+  imageCaption?: string;
+  ctaTitle: string;
+  ctaSubtitle: string;
+  ctaButtonText: string;
 }

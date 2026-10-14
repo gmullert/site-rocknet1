@@ -3,11 +3,8 @@ import { ROCKNET_INFO } from '../data/content';
 import { SiteSettings } from '../services/storage';
 import { FrontendContent } from '../types';
 import { 
-  ShieldCheck, 
-  Headphones, 
   ArrowRight, 
   Gauge, 
-  CheckCircle2, 
   ChevronLeft, 
   ChevronRight, 
   Pause, 
@@ -93,12 +90,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContract, content, settings })
   const ctaPrimaryLink = content?.ctaPrimaryLink || '#planos';
   const ctaSecondaryText = content?.ctaSecondaryText || 'Consultar Minha Rua';
   const ctaSecondaryLink = content?.ctaSecondaryLink || '#cobertura';
-  const badge1Title = content?.badge1Title || 'Instalação Ágil';
-  const badge1Subtitle = content?.badge1Subtitle || 'Em até 24h a 48h';
-  const badge2Title = content?.badge2Title || 'Zero Franquia';
-  const badge2Subtitle = content?.badge2Subtitle || 'Dados ilimitados';
-  const badge3Title = content?.badge3Title || 'Suporte Direto';
-  const badge3Subtitle = content?.badge3Subtitle || (settings?.phoneDisplay || ROCKNET_INFO.phoneDisplay);
   const statLatency = content?.statLatency || '~6ms a 12ms';
   const statUptime = content?.statUptime || 'FTTH Fibra Pura';
 
@@ -234,32 +225,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContract, content, settings })
               </a>
             </div>
 
-            {/* Quick Proof Badges (Adjacency principle) */}
-            <div className="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-neutral-800/80">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-white">{badge1Title}</p>
-                  <p className="text-[11px] text-neutral-400">{badge1Subtitle}</p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-white">{badge2Title}</p>
-                  <p className="text-[11px] text-neutral-400">{badge2Subtitle}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 col-span-2 sm:col-span-1">
-                <Headphones className="w-5 h-5 text-cyan-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-white">{badge3Title}</p>
-                  <p className="text-[11px] text-neutral-400">{badge3Subtitle}</p>
-                </div>
-              </div>
-            </div>
 
           </div>
 

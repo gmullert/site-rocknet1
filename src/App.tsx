@@ -16,6 +16,7 @@ import {
 
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { AboutSection } from './components/AboutSection';
 import { PlansSection } from './components/PlansSection';
 import { SiteToolsSection } from './components/SiteToolsSection';
 import { CoverageSection } from './components/CoverageSection';
@@ -109,6 +110,15 @@ export default function App() {
           settings={settings}
           onOpenContract={() => handleOpenContract()} 
         />
+
+        {/* About Company Section (Model: Zaaz Telecom institutional) */}
+        {frontendContent.aboutSection?.enabled !== false && (
+          <AboutSection
+            content={frontendContent.aboutSection}
+            settings={settings}
+            onOpenContract={() => handleOpenContract()}
+          />
+        )}
 
         {/* Plans of Fiber Optics */}
         <PlansSection

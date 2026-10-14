@@ -259,15 +259,53 @@ export const INSTAGRAM_HIGHLIGHTS = [
   },
 ];
 
+export const DEFAULT_ABOUT_CONTENT = {
+  enabled: true,
+  navLinkText: 'A Rocknet',
+  badge: 'NOSSA HISTÓRIA & PROPÓSITO',
+  title: 'A Rocknet Telecom',
+  subtitle: 'Muito mais que um provedor de internet: uma infraestrutura de fibra óptica de última geração conectando pessoas, famílias e empresas ao futuro.',
+  historyParagraph1: 'Nascemos com a missão de transformar o cenário de telecomunicações em Camilos e região. Em um mercado onde conexões instáveis e atendimentos impessoais eram a regra, a Rocknet surgiu para provar que é possível entregar ultravelocidade com estabilidade e respeito ao assinante.',
+  historyParagraph2: 'Investimos continuamente em uma rede 100% fibra óptica de ponta a ponta (FTTH), eliminando cabos antigos e interferências. Do nosso anel óptico de alta disponibilidade até o roteador dentro da sua residência, cada detalhe é projetado para garantir latência mínima, downloads ultrarrápidos e disponibilidade ininterrupta.',
+  historyParagraph3: 'Hoje, nos orgulhamos de conectar milhares de famílias, profissionais em home office, gamers e empresas locais. Nosso compromisso vai além dos Megabytes: estamos presentes na comunidade com suporte técnico ágil feito por pessoas reais da própria cidade, gerando empregos e impulsionando o desenvolvimento regional.',
+  quoteText: 'Conectar pessoas é encurtar distâncias e abrir portas para o mundo. Fazemos isso todos os dias com paixão pela tecnologia e compromisso com você.',
+  quoteAuthor: 'Equipe Rocknet Telecom',
+  missionTitle: 'Nossa Missão',
+  missionDesc: 'Levar conexão de ultravelocidade e transformar a experiência digital dos nossos clientes com tecnologia de ponta, estabilidade de rede e atendimento humanizado.',
+  visionTitle: 'Nossa Visão',
+  visionDesc: 'Ser a operadora de internet referência regional em excelência, inovação contínua e índice de satisfação, conectando 100% dos lares da região com a melhor fibra óptica.',
+  valuesTitle: 'Nossos Valores',
+  valuesDesc: 'Transparência em primeiro lugar, atendimento com empatia e agilidade, qualidade técnica sem concessões, inovação constante e responsabilidade com a nossa comunidade.',
+  stats: [
+    { value: '100%', label: 'Fibra Óptica Pura', sublabel: 'Tecnologia FTTH de ponta a ponta' },
+    { value: '+15.000', label: 'Conexões Ativas', sublabel: 'Lares e empresas conectados' },
+    { value: '99.8%', label: 'Disponibilidade', sublabel: 'Rede redundante com monitoramento 24/7' },
+    { value: '< 5 min', label: 'Suporte Local', sublabel: 'Atendimento humanizado no WhatsApp' },
+  ],
+  differentials: [
+    { title: 'Fibra Óptica de Verdade', desc: 'Sinal 100% digital e imune a chuvas, ventos ou descargas atmosféricas. Conexão estável do início ao fim.' },
+    { title: 'Equipamentos de Alta Potência', desc: 'Roteadores Wi-Fi Gigabit inclusos para cobrir todos os cômodos da sua casa sem pontos cegos.' },
+    { title: 'Atendimento Humanizado', desc: 'Chega de robôs confusos. Nossos técnicos atendem você pelo WhatsApp com agilidade e conhecimento técnico real.' },
+    { title: 'Planos Transparentes', desc: 'Sem franquia oculta, sem pegadinhas contratuais e com a velocidade real simétrica que você contratou.' },
+  ],
+  imageUrl: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80',
+  imageCaption: 'Infraestrutura com tecnologia de última geração e fibra óptica ponta a ponta',
+  ctaTitle: 'Faça parte da história da internet mais rápida da região',
+  ctaSubtitle: 'Descubra os nossos planos de fibra óptica ou fale diretamente com a nossa equipe de especialistas.',
+  ctaButtonText: 'Conhecer Nossos Planos',
+};
+
 export const DEFAULT_FRONTEND_CONTENT = {
   navbar: {
     ctaText: 'Assinar Agora',
+    aboutLinkText: 'A Rocknet',
     plansLinkText: 'Planos de Fibra',
     toolsLinkText: 'Ferramentas & Serviços',
     coverageLinkText: 'Área de Cobertura',
     supportLinkText: 'Suporte Técnico',
     instagramLinkText: 'Instagram',
   },
+  aboutSection: DEFAULT_ABOUT_CONTENT,
   hero: {
     topBadge: 'Provedor de Camilos · 100% Fibra Pura (FTTH) · Roteador Incluso',
     title: 'Ultravelocidade em fibra óptica para conectar toda a sua vida.',

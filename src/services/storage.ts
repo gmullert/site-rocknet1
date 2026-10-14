@@ -295,6 +295,7 @@ export const getStoredFrontendContent = (): FrontendContent => {
         ...DEFAULT_FRONTEND_CONTENT,
         ...parsed,
         navbar: { ...DEFAULT_FRONTEND_CONTENT.navbar, ...(parsed.navbar || {}) },
+        aboutSection: { ...DEFAULT_FRONTEND_CONTENT.aboutSection, ...(parsed.aboutSection || {}) },
         hero: { ...DEFAULT_FRONTEND_CONTENT.hero, ...(parsed.hero || {}) },
         plansSection: { ...DEFAULT_FRONTEND_CONTENT.plansSection, ...(parsed.plansSection || {}) },
         toolsSection: { ...DEFAULT_FRONTEND_CONTENT.toolsSection, ...(parsed.toolsSection || {}) },

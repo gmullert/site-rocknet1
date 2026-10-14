@@ -25,12 +25,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navTexts = content?.navbar || {
     ctaText: 'Assinar Agora',
+    aboutLinkText: 'A Rocknet',
     plansLinkText: 'Planos de Fibra',
     toolsLinkText: 'Ferramentas & Serviços',
     coverageLinkText: 'Área de Cobertura',
     supportLinkText: 'Suporte Técnico',
     instagramLinkText: 'Instagram',
   };
+
+  const aboutLinkTitle = content?.aboutSection?.navLinkText || navTexts.aboutLinkText || 'A Rocknet';
+  const showAbout = content?.aboutSection?.enabled !== false;
 
   const logoPrimary = settings?.logoTextPrimary || 'Rock';
   const logoAccent = settings?.logoTextAccent || 'net';
@@ -61,8 +65,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </a>
 
-          {/* Zone 2: 4-6 Nav links with clean typography */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-neutral-300">
+          {/* Zone 2: Nav links with clean typography */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-7 text-sm font-medium text-neutral-300">
+            {showAbout && (
+              <a 
+                href="#sobre-empresa" 
+                className="hover:text-cyan-400 text-neutral-200 transition-colors flex items-center gap-1.5"
+                title="Conheça a história e estrutura da Rocknet"
+              >
+                <span>{aboutLinkTitle}</span>
+              </a>
+            )}
             <a href="#planos" className="hover:text-cyan-400 transition-colors">
               {navTexts.plansLinkText}
             </a>
@@ -125,6 +138,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-neutral-800 bg-neutral-900/98 px-4 pt-3 pb-6 space-y-3">
+          {showAbout && (
+            <a
+              href="#sobre-empresa"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-semibold text-cyan-400 bg-neutral-800/60 hover:bg-neutral-800"
+            >
+              {aboutLinkTitle}
+            </a>
+          )}
           <a
             href="#planos"
             onClick={() => setMobileMenuOpen(false)}

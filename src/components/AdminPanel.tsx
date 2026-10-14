@@ -61,8 +61,12 @@ import {
   User,
   Lock,
   LogOut,
-  Globe
+  Globe,
+  Building2,
+  Target,
+  Quote
 } from 'lucide-react';
+import { DEFAULT_ABOUT_CONTENT } from '../data/content';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -102,7 +106,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateFrontendContent,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'branding' | 'hero' | 'plans' | 'tools' | 'coverage' | 'support' | 'faq' | 'social' | 'footer' | 'leads' | 'vencimentos' | 'settings' | 'users'
+    'branding' | 'hero' | 'about' | 'plans' | 'tools' | 'coverage' | 'support' | 'faq' | 'social' | 'footer' | 'leads' | 'vencimentos' | 'settings' | 'users'
   >('branding');
   const [newDueDayInput, setNewDueDayInput] = useState('');
 
@@ -459,6 +463,61 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           hero: { ...prev.hero, imageUrl: result },
         }));
         showToast('Imagem do Hero carregada! Clique em "Salvar Hero" para confirmar.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // About company image file upload handler
+  const handleAboutImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Por favor, selecione um arquivo de imagem válido (PNG, JPG, WebP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        try {
+          const res = await fetch('/api/upload-support-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataUrl: result }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) {
+              const currentAbout = frontendContentForm.aboutSection || DEFAULT_ABOUT_CONTENT;
+              const updated = {
+                ...frontendContentForm,
+                aboutSection: {
+                  ...currentAbout,
+                  imageUrl: data.url,
+                },
+              };
+              setFrontendContentForm(updated);
+              if (onUpdateFrontendContent) onUpdateFrontendContent(updated);
+              saveStoredFrontendContent(updated);
+              showToast('Foto da empresa enviada e salva com sucesso!');
+              return;
+            }
+          }
+        } catch {}
+
+        const currentAbout = frontendContentForm.aboutSection || DEFAULT_ABOUT_CONTENT;
+        const updated = {
+          ...frontendContentForm,
+          aboutSection: {
+            ...currentAbout,
+            imageUrl: result,
+          },
+        };
+        setFrontendContentForm(updated);
+        if (onUpdateFrontendContent) onUpdateFrontendContent(updated);
+        saveStoredFrontendContent(updated);
+        showToast('Foto da empresa carregada com sucesso! Clique em "Salvar A Empresa" para confirmar.');
       }
     };
     reader.readAsDataURL(file);
@@ -1335,6 +1394,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <button
               type="button"
               role="tab"
+              aria-selected={activeTab === 'about'}
+              onClick={() => setActiveTab('about')}
+              className={`px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                activeTab === 'about'
+                  ? 'bg-cyan-400 text-neutral-950 font-bold shadow-md shadow-cyan-400/20'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>A Empresa (Sobre)</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
               aria-selected={activeTab === 'plans'}
               onClick={() => setActiveTab('plans')}
               className={`px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
@@ -1926,6 +2000,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
+                      <label className="text-neutral-400 block mb-1">Link A Rocknet (Empresa)</label>
+                      <input
+                        type="text"
+                        value={frontendContentForm.aboutSection?.navLinkText || frontendContentForm.navbar.aboutLinkText || 'A Rocknet'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFrontendContentForm({
+                            ...frontendContentForm,
+                            navbar: { ...frontendContentForm.navbar, aboutLinkText: val },
+                            aboutSection: {
+                              ...(frontendContentForm.aboutSection || DEFAULT_ABOUT_CONTENT),
+                              navLinkText: val,
+                            },
+                          });
+                        }}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white text-cyan-300 font-semibold"
+                      />
+                    </div>
+                    <div>
                       <label className="text-neutral-400 block mb-1">Link Planos</label>
                       <input
                         type="text"
@@ -2257,64 +2350,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     })}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div>
-                      <label className="text-neutral-400 block mb-1">Destaque 1 - Título</label>
-                      <input
-                        type="text"
-                        value={frontendContentForm.hero.badge1Title}
-                        onChange={(e) =>
-                          setFrontendContentForm({
-                            ...frontendContentForm,
-                            hero: { ...frontendContentForm.hero, badge1Title: e.target.value },
-                          })
-                        }
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-neutral-400 block mb-1">Destaque 1 - Subtítulo</label>
-                      <input
-                        type="text"
-                        value={frontendContentForm.hero.badge1Subtitle}
-                        onChange={(e) =>
-                          setFrontendContentForm({
-                            ...frontendContentForm,
-                            hero: { ...frontendContentForm.hero, badge1Subtitle: e.target.value },
-                          })
-                        }
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-neutral-400 block mb-1">Destaque 2 - Título</label>
-                      <input
-                        type="text"
-                        value={frontendContentForm.hero.badge2Title}
-                        onChange={(e) =>
-                          setFrontendContentForm({
-                            ...frontendContentForm,
-                            hero: { ...frontendContentForm.hero, badge2Title: e.target.value },
-                          })
-                        }
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-neutral-400 block mb-1">Destaque 2 - Subtítulo</label>
-                      <input
-                        type="text"
-                        value={frontendContentForm.hero.badge2Subtitle}
-                        onChange={(e) =>
-                          setFrontendContentForm({
-                            ...frontendContentForm,
-                            hero: { ...frontendContentForm.hero, badge2Subtitle: e.target.value },
-                          })
-                        }
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
-                      />
-                    </div>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div>
@@ -2350,6 +2385,444 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             </div>
           )}
+
+          {/* TAB: ABOUT COMPANY (A EMPRESA - MODELO ZAAZ TELECOM) */}
+          {activeTab === 'about' && (() => {
+            const about = frontendContentForm.aboutSection || DEFAULT_ABOUT_CONTENT;
+            
+            const updateAbout = (patch: Partial<typeof about>) => {
+              const updatedAbout = { ...about, ...patch };
+              const updatedContent: FrontendContent = {
+                ...frontendContentForm,
+                navbar: {
+                  ...frontendContentForm.navbar,
+                  aboutLinkText: patch.navLinkText !== undefined ? patch.navLinkText : frontendContentForm.navbar.aboutLinkText,
+                },
+                aboutSection: updatedAbout,
+              };
+              setFrontendContentForm(updatedContent);
+            };
+
+            return (
+              <div className="space-y-6">
+                {/* Header with Save and Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <span>A Empresa / Sobre Nós</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">
+                          Modelo Zaaz Telecom
+                        </span>
+                      </h3>
+                      <p className="text-xs text-neutral-400">
+                        Edite todos os textos da empresa, história, missão, visão, valores, diferenciais e fotos institucionais.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => updateAbout({ enabled: about.enabled === false ? true : false })}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+                        about.enabled !== false
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-neutral-800 text-neutral-400 border-neutral-700'
+                      }`}
+                    >
+                      {about.enabled !== false ? <ToggleRight className="w-4 h-4 text-emerald-400" /> : <ToggleLeft className="w-4 h-4 text-neutral-500" />}
+                      <span>{about.enabled !== false ? 'Seção Ativa' : 'Seção Oculta'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveFrontendSection('Dados institucionais de "A Empresa" salvos com sucesso!')}
+                      className="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Salvar A Empresa</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid 1: Identidade no Topo & Títulos */}
+                <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>Identidade no Menu Superior & Títulos da Seção</span>
+                  </h4>
+
+                  <div>
+                    <label className="text-neutral-400 block mb-1">
+                      Texto do Link no Cabeçalho (Menu Superior)
+                    </label>
+                    <input
+                      type="text"
+                      value={about.navLinkText || 'A Rocknet'}
+                      onChange={(e) => updateAbout({ navLinkText: e.target.value })}
+                      placeholder="Ex: A Rocknet ou A Empresa"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white font-semibold text-cyan-300"
+                    />
+                    <span className="text-[10px] text-neutral-500 mt-1 block">
+                      Este é o link que aparece na barra do topo do site.
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-neutral-400 block mb-1">
+                        Título Principal da Seção
+                      </label>
+                      <input
+                        type="text"
+                        value={about.title || ''}
+                        onChange={(e) => updateAbout({ title: e.target.value })}
+                        placeholder="Ex: A Rocknet Telecom"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">
+                        Subtítulo / Slogan Institucional
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={about.subtitle || ''}
+                        onChange={(e) => updateAbout({ subtitle: e.target.value })}
+                        placeholder="Frase inspiradora sobre conectar famílias e empresas com fibra óptica..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid 2: História & Quem Somos (3 Parágrafos) */}
+                <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-cyan-400" />
+                    <span>Nossa História & Quem Somos (Storytelling da Empresa)</span>
+                  </h4>
+
+                  <div>
+                    <label className="text-neutral-400 block mb-1">
+                      Parágrafo 1 (Origem, Fundação e Propósito)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={about.historyParagraph1 || ''}
+                      onChange={(e) => updateAbout({ historyParagraph1: e.target.value })}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-neutral-400 block mb-1">
+                      Parágrafo 2 (Tecnologia 100% Fibra Óptica FTTH e Estabilidade)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={about.historyParagraph2 || ''}
+                      onChange={(e) => updateAbout({ historyParagraph2: e.target.value })}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-neutral-400 block mb-1">
+                      Parágrafo 3 (Presença na Cidade, Suporte Técnico Local e Futuro)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={about.historyParagraph3 || ''}
+                      onChange={(e) => updateAbout({ historyParagraph3: e.target.value })}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    <div className="md:col-span-2">
+                      <label className="text-neutral-400 block mb-1">
+                        Frase de Efeito em Destaque (Citação / Lema)
+                      </label>
+                      <input
+                        type="text"
+                        value={about.quoteText || ''}
+                        onChange={(e) => updateAbout({ quoteText: e.target.value })}
+                        placeholder="Ex: Conectar pessoas é encurtar distâncias e abrir portas para o mundo..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 block mb-1">
+                        Autor / Assinatura da Frase
+                      </label>
+                      <input
+                        type="text"
+                        value={about.quoteAuthor || ''}
+                        onChange={(e) => updateAbout({ quoteAuthor: e.target.value })}
+                        placeholder="Ex: Equipe Rocknet Telecom"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid 3: Missão, Visão e Valores (3 Cards) */}
+                <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <Target className="w-4 h-4 text-cyan-400" />
+                    <span>Missão, Visão e Valores (3 Cartões Institucionais)</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Missão */}
+                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
+                      <div className="flex items-center gap-2 text-cyan-400 font-bold">
+                        <Target className="w-4 h-4" />
+                        <span>Missão</span>
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
+                        <input
+                          type="text"
+                          value={about.missionTitle || 'Nossa Missão'}
+                          onChange={(e) => updateAbout({ missionTitle: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
+                        <textarea
+                          rows={3}
+                          value={about.missionDesc || ''}
+                          onChange={(e) => updateAbout({ missionDesc: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Visão */}
+                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
+                      <div className="flex items-center gap-2 text-blue-400 font-bold">
+                        <Eye className="w-4 h-4" />
+                        <span>Visão</span>
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
+                        <input
+                          type="text"
+                          value={about.visionTitle || 'Nossa Visão'}
+                          onChange={(e) => updateAbout({ visionTitle: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
+                        <textarea
+                          rows={3}
+                          value={about.visionDesc || ''}
+                          onChange={(e) => updateAbout({ visionDesc: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Valores */}
+                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Valores</span>
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
+                        <input
+                          type="text"
+                          value={about.valuesTitle || 'Nossos Valores'}
+                          onChange={(e) => updateAbout({ valuesTitle: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
+                        <textarea
+                          rows={3}
+                          value={about.valuesDesc || ''}
+                          onChange={(e) => updateAbout({ valuesDesc: e.target.value })}
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Grid 4: 4 Diferenciais Competitivos */}
+                <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-cyan-400" />
+                    <span>4 Diferenciais da Empresa (Por que escolher a Rocknet?)</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {(about.differentials || DEFAULT_ABOUT_CONTENT.differentials).map((diff, idx) => (
+                      <div key={idx} className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
+                        <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                          Diferencial #{idx + 1}
+                        </div>
+                        <div>
+                          <label className="text-neutral-400 block text-[10px] mb-0.5">Título</label>
+                          <input
+                            type="text"
+                            value={diff.title}
+                            onChange={(e) => {
+                              const newDiffs = [...(about.differentials || DEFAULT_ABOUT_CONTENT.differentials)];
+                              newDiffs[idx] = { ...newDiffs[idx], title: e.target.value };
+                              updateAbout({ differentials: newDiffs });
+                            }}
+                            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-neutral-400 block text-[10px] mb-0.5">Descrição</label>
+                          <textarea
+                            rows={3}
+                            value={diff.desc}
+                            onChange={(e) => {
+                              const newDiffs = [...(about.differentials || DEFAULT_ABOUT_CONTENT.differentials)];
+                              newDiffs[idx] = { ...newDiffs[idx], desc: e.target.value };
+                              updateAbout({ differentials: newDiffs });
+                            }}
+                            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Grid 5: Foto Institucional & CTA Banner */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+                  
+                  {/* Foto Institucional */}
+                  <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Image className="w-4 h-4 text-cyan-400" />
+                      <span>Foto Institucional da Empresa / Equipe</span>
+                    </h4>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-20 rounded-xl overflow-hidden bg-neutral-950 border border-neutral-800 shrink-0">
+                        <img
+                          src={about.imageUrl || DEFAULT_ABOUT_CONTENT.imageUrl}
+                          alt="Foto da empresa"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80';
+                          }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 flex-1">
+                        <label className="flex items-center justify-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg cursor-pointer font-medium text-xs transition-colors">
+                          <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Enviar Foto da Empresa</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAboutImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[10px] text-neutral-500 block">
+                          Envie foto da sede, frota de veículos ou técnicos.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Ou Link Direto da Imagem (URL)</label>
+                      <input
+                        type="text"
+                        value={about.imageUrl || ''}
+                        onChange={(e) => updateAbout({ imageUrl: e.target.value })}
+                        placeholder="https://exemplo.com.br/foto-empresa.jpg"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white font-mono text-[11px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Legenda da Imagem</label>
+                      <input
+                        type="text"
+                        value={about.imageCaption || ''}
+                        onChange={(e) => updateAbout({ imageCaption: e.target.value })}
+                        placeholder="Ex: Infraestrutura com tecnologia de última geração..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Chamada para Ação (CTA) */}
+                  <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <span>Chamada para Ação (Banner Final da Seção)</span>
+                    </h4>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Título do Banner</label>
+                      <input
+                        type="text"
+                        value={about.ctaTitle || ''}
+                        onChange={(e) => updateAbout({ ctaTitle: e.target.value })}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Subtítulo do Banner</label>
+                      <textarea
+                        rows={2}
+                        value={about.ctaSubtitle || ''}
+                        onChange={(e) => updateAbout({ ctaSubtitle: e.target.value })}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Texto do Botão Principal</label>
+                      <input
+                        type="text"
+                        value={about.ctaButtonText || 'Conhecer Nossos Planos'}
+                        onChange={(e) => updateAbout({ ctaButtonText: e.target.value })}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white text-cyan-300 font-bold"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom Save Action Bar */}
+                <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-900/90 border border-cyan-500/30">
+                  <div className="flex items-center gap-2 text-xs text-neutral-300">
+                    <CheckCircle className="w-4 h-4 text-cyan-400" />
+                    <span>Todas as alterações em "A Empresa" são refletidas imediatamente na página do site e no menu superior.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveFrontendSection('Dados de "A Empresa" salvos com sucesso!')}
+                    className="px-5 py-2.5 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Salvar Alterações</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* TAB 1: PLANS & PRICING MANAGEMENT */}
           {activeTab === 'plans' && (
