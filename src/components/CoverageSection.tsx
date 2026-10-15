@@ -66,24 +66,24 @@ export const CoverageSection: React.FC<CoverageSectionProps> = ({
 
 
   return (
-    <section id="cobertura" className="py-20 bg-neutral-950/70 border-b border-neutral-900 scroll-mt-12">
+    <section id="cobertura" className="py-12 sm:py-16 md:py-20 bg-neutral-950/70 border-b border-neutral-900 scroll-mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="text-xs font-semibold text-cyan-400 tracking-wider uppercase mb-2">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+          <div className="text-xs font-semibold text-cyan-400 tracking-wider uppercase mb-1.5">
             {badgeText}
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
             {titleText}
           </h2>
-          <p className="mt-4 text-base text-neutral-400">
+          <p className="mt-3 text-sm sm:text-base text-neutral-400">
             {subtitleText}
           </p>
         </div>
 
         {/* Real-time Address Viability Checker Box (Targets focus-mode CSS selector) */}
-        <div className="max-w-4xl mx-auto mb-16 p-6 sm:p-8 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl">
+        <div className="max-w-4xl mx-auto mb-10 sm:mb-12 p-5 sm:p-7 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl">
           <div className="flex flex-col md:flex-row items-center gap-4">
             <div className="relative flex-1 w-full">
               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />

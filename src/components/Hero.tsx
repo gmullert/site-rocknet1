@@ -184,26 +184,26 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContract, content, settings })
   const currentSlide = slides[currentIndex] || slides[0];
 
   return (
-    <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 border-b border-neutral-900 bg-radial from-cyan-950/20 via-neutral-950 to-neutral-950">
+    <section className="relative overflow-hidden pt-6 pb-12 lg:pt-10 lg:pb-16 border-b border-neutral-900 bg-radial from-cyan-950/20 via-neutral-950 to-neutral-950">
       {/* Background ambient accents */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
           
           {/* Left Column: Proposition and Direct Actions */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 space-y-5">
             
             {/* Zero-pill metadata line */}
             <div className="flex items-center gap-2 text-xs font-semibold text-cyan-400 tracking-wide uppercase">
               <span>{topBadge}</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.08] text-balance font-display">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] text-balance font-display break-words">
               {title}
             </h1>
 
-            <p className="text-lg text-neutral-300 max-w-2xl leading-relaxed">
+            <p className="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed">
               {subtitle}
             </p>
 
@@ -242,6 +242,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContract, content, settings })
               <img
                 src={currentSlide.image}
                 alt={currentSlide.title}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full aspect-[4/3] object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 referrerPolicy="no-referrer"
               />
@@ -258,6 +260,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContract, content, settings })
                     <img
                       src={s.image}
                       alt={s.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />

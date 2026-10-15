@@ -173,11 +173,11 @@ _Gostaria de confirmar o agendamento da instalação pelo site da Rocknet!_`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         {/* Top Header */}
-        <div className="p-6 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
+        <div className="p-4 sm:p-6 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
               <ShieldCheck className="w-6 h-6" />
@@ -234,7 +234,7 @@ _Gostaria de confirmar o agendamento da instalação pelo site da Rocknet!_`;
         )}
 
         {/* Body Form */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           
           {/* STEP 1: Select/Confirm Plan */}
           {step === 1 && (

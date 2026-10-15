@@ -3,9 +3,6 @@ import { AboutCompanyContent } from '../types';
 import { SiteSettings } from '../services/storage';
 import { ROCKNET_INFO } from '../data/content';
 import { 
-  Target, 
-  Eye, 
-  ShieldCheck, 
   Wifi, 
   ArrowRight, 
   CheckCircle2, 
@@ -39,14 +36,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
   const quote = content?.quoteText || 'Conectar pessoas é encurtar distâncias e abrir portas para o mundo. Fazemos isso todos os dias com paixão pela tecnologia e compromisso com você.';
   const quoteAuthor = content?.quoteAuthor || 'Equipe Rocknet Telecom';
 
-  const missionTitle = content?.missionTitle || 'Nossa Missão';
-  const missionDesc = content?.missionDesc || 'Levar conexão de ultravelocidade e transformar a experiência digital dos nossos clientes com tecnologia de ponta, estabilidade de rede e atendimento humanizado.';
-
-  const visionTitle = content?.visionTitle || 'Nossa Visão';
-  const visionDesc = content?.visionDesc || 'Ser a operadora de internet referência regional em excelência, inovação contínua e índice de satisfação, conectando 100% dos lares da região com a melhor fibra óptica.';
-
-  const valuesTitle = content?.valuesTitle || 'Nossos Valores';
-  const valuesDesc = content?.valuesDesc || 'Transparência em primeiro lugar, atendimento com empatia e agilidade, qualidade técnica sem concessões, inovação constante e responsabilidade com a nossa comunidade.';
 
 
   const differentials = content?.differentials && content.differentials.length > 0 ? content.differentials : [
@@ -67,7 +56,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
   const whatsappUrl = `https://wa.me/${phoneRaw}?text=${encodeURIComponent('Olá! Gostaria de conhecer mais sobre os planos da Rocknet Telecom.')}`;
 
   return (
-    <section id="sobre-empresa" className="py-20 md:py-28 bg-neutral-950 border-b border-neutral-900 relative overflow-hidden">
+    <section id="sobre-empresa" className="py-12 sm:py-16 md:py-20 bg-neutral-950 border-b border-neutral-900 relative overflow-hidden">
       {/* Background ambient decorative glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute -bottom-10 right-10 w-[450px] h-[300px] bg-blue-600/5 blur-[100px] rounded-full pointer-events-none" />
@@ -75,7 +64,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Header Title & Subtitle */}
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mb-5 leading-tight">
             {title}
           </h2>
@@ -85,7 +74,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
         </div>
 
         {/* Section 1: Editorial Storytelling & Institutional Image */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center mb-20 md:mb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center mb-10 sm:mb-14">
           
           {/* Left Column: Storytelling Paragraphs */}
           <div className="lg:col-span-7 space-y-5 text-neutral-300 text-sm sm:text-base leading-relaxed">
@@ -127,6 +116,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
                 <img
                   src={imageUrl}
                   alt={title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   onError={(e) => {
                     // Fallback to high-tech server room / fiber infrastructure
@@ -153,68 +144,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
 
         </div>
 
-        {/* Section 2: Mission, Vision and Values (3 Cards - Zaaz Telecom Model) */}
-        <div className="mb-20 md:mb-24">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 block mb-2">
-              Nossos Pilares
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Missão, Visão e Valores que nos guiam
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Card Missão */}
-            <div className="p-7 rounded-2xl bg-gradient-to-b from-neutral-900/90 to-neutral-900/50 border border-neutral-800 hover:border-cyan-500/50 transition-all duration-300 group shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-5 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all">
-                <Target className="w-6 h-6" />
-              </div>
-              <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>{missionTitle}</span>
-              </h4>
-              <p className="text-sm text-neutral-300 leading-relaxed">
-                {missionDesc}
-              </p>
-            </div>
-
-            {/* Card Visão */}
-            <div className="p-7 rounded-2xl bg-gradient-to-b from-neutral-900/90 to-neutral-900/50 border border-neutral-800 hover:border-blue-500/50 transition-all duration-300 group shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all">
-                <Eye className="w-6 h-6" />
-              </div>
-              <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>{visionTitle}</span>
-              </h4>
-              <p className="text-sm text-neutral-300 leading-relaxed">
-                {visionDesc}
-              </p>
-            </div>
-
-            {/* Card Valores */}
-            <div className="p-7 rounded-2xl bg-gradient-to-b from-neutral-900/90 to-neutral-900/50 border border-neutral-800 hover:border-cyan-400/50 transition-all duration-300 group shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-5 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>{valuesTitle}</span>
-              </h4>
-              <p className="text-sm text-neutral-300 leading-relaxed">
-                {valuesDesc}
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-
-        {/* Section 4: 4 Key Differentials */}
-        <div className="mb-16 md:mb-20">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 block mb-2">
-              Por Que a Rocknet?
-            </span>
+        {/* Section 2: Key Differentials */}
+        <div className="mb-10 sm:mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
               Diferenciais que você sente na primeira navegação
             </h3>
@@ -224,13 +156,15 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             {differentials.map((item, index) => (
               <div 
                 key={index}
-                className="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-cyan-500/40 transition-colors"
+                className="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-cyan-500/40 transition-colors flex flex-col justify-between"
               >
-                <div className="w-8 h-8 rounded-lg bg-cyan-400/10 text-cyan-400 flex items-center justify-center mb-3.5">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 text-cyan-400 flex items-center justify-center mb-3.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <h5 className="font-bold text-white text-sm mb-2">{item.title}</h5>
+                  <p className="text-xs text-neutral-400 leading-relaxed">{item.desc}</p>
                 </div>
-                <h5 className="font-bold text-white text-sm mb-2">{item.title}</h5>
-                <p className="text-xs text-neutral-400 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>

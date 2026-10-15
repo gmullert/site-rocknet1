@@ -795,7 +795,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleSavePlan = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingPlan) {
-      const updated = plans.map((p) => (p.id === editingPlan.id ? editingPlan : p));
+      const cleanFeatures = (editingPlan.features || [])
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
+      const planToSave: Plan = {
+        ...editingPlan,
+        features: cleanFeatures.length > 0 ? cleanFeatures : ['100% Fibra Óptica Real Simétrica'],
+      };
+      const updated = plans.map((p) => (p.id === planToSave.id ? planToSave : p));
       onUpdatePlans(updated);
       saveStoredPlans(updated);
       setEditingPlan(null);
@@ -805,6 +812,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         showToast('Por favor, informe o nome do plano.');
         return;
       }
+      const cleanFeatures = (newPlanForm.features || [])
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
       const newPlan: Plan = {
         id: `plano-${Date.now()}`,
         name: newPlanForm.name || 'Novo Plano',
@@ -817,7 +827,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         description: newPlanForm.description || '',
         equipment: newPlanForm.equipment || `${newPlanForm.routerCount || 1} Roteador(es) Wi-Fi incluso(s)`,
         idealFor: newPlanForm.idealFor || 'Uso residencial',
-        features: newPlanForm.features || ['100% Fibra Óptica', 'Roteador Gigabit incluso'],
+        features: cleanFeatures.length > 0 ? cleanFeatures : [
+          'Velocidade Real Simétrica',
+          '100% Fibra Óptica Pura (FTTH)',
+          'Instalação Gratuita com Agendamento',
+          'Sem Franquia de Consumo',
+          'Suporte Técnico Local em Camilos'
+        ],
         featured: !!newPlanForm.featured,
         tag: newPlanForm.tag || (newPlanForm.routerCount ? `${newPlanForm.routerCount} ROTEADOR${newPlanForm.routerCount > 1 ? 'ES' : ''} INCLUSO${newPlanForm.routerCount > 1 ? 'S' : ''}` : undefined),
         period: '/mês',
@@ -2419,7 +2435,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </span>
                       </h3>
                       <p className="text-xs text-neutral-400">
-                        Edite todos os textos da empresa, história, missão, visão, valores, diferenciais e fotos institucionais.
+                        Edite todos os textos da empresa, história, diferenciais e fotos institucionais.
                       </p>
                     </div>
                   </div>
@@ -2572,93 +2588,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                 </div>
 
-                {/* Grid 3: Missão, Visão e Valores (3 Cards) */}
-                <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
-                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                    <Target className="w-4 h-4 text-cyan-400" />
-                    <span>Missão, Visão e Valores (3 Cartões Institucionais)</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Missão */}
-                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
-                      <div className="flex items-center gap-2 text-cyan-400 font-bold">
-                        <Target className="w-4 h-4" />
-                        <span>Missão</span>
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
-                        <input
-                          type="text"
-                          value={about.missionTitle || 'Nossa Missão'}
-                          onChange={(e) => updateAbout({ missionTitle: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
-                        <textarea
-                          rows={3}
-                          value={about.missionDesc || ''}
-                          onChange={(e) => updateAbout({ missionDesc: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Visão */}
-                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
-                      <div className="flex items-center gap-2 text-blue-400 font-bold">
-                        <Eye className="w-4 h-4" />
-                        <span>Visão</span>
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
-                        <input
-                          type="text"
-                          value={about.visionTitle || 'Nossa Visão'}
-                          onChange={(e) => updateAbout({ visionTitle: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
-                        <textarea
-                          rows={3}
-                          value={about.visionDesc || ''}
-                          onChange={(e) => updateAbout({ visionDesc: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Valores */}
-                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
-                      <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Valores</span>
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Título</label>
-                        <input
-                          type="text"
-                          value={about.valuesTitle || 'Nossos Valores'}
-                          onChange={(e) => updateAbout({ valuesTitle: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-neutral-400 block text-[11px] mb-1">Descrição</label>
-                        <textarea
-                          rows={3}
-                          value={about.valuesDesc || ''}
-                          onChange={(e) => updateAbout({ valuesDesc: e.target.value })}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-1.5 text-white text-[11px]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 {/* Grid 4: 4 Diferenciais Competitivos */}
                 <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
                   <h4 className="font-bold text-white text-sm flex items-center gap-2">
@@ -2843,21 +2772,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <span>Salvar Títulos</span>
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <label className="text-neutral-400 block mb-1">Badge Superior</label>
-                    <input
-                      type="text"
-                      value={frontendContentForm.plansSection.badge}
-                      onChange={(e) =>
-                        setFrontendContentForm({
-                          ...frontendContentForm,
-                          plansSection: { ...frontendContentForm.plansSection, badge: e.target.value },
-                        })
-                      }
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
                     <label className="text-neutral-400 block mb-1">Título Principal (H2)</label>
                     <input
@@ -2900,6 +2815,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onClick={() => {
                     setIsAddingPlan(true);
                     setEditingPlan(null);
+                    setNewPlanForm({
+                      name: '',
+                      speed: 500,
+                      speedUnit: 'MEGA',
+                      price: '90',
+                      cents: ',00',
+                      routerCount: 2,
+                      category: 'residencial',
+                      description: 'Conexão 100% fibra óptica com ultraestabilidade.',
+                      equipment: '2 Roteadores Wi-Fi inclusos (Comodato gratuito)',
+                      idealFor: 'Toda a família',
+                      features: [
+                        'Velocidade Real Simétrica',
+                        '2 Roteadores Wi-Fi Inclusos',
+                        '100% Fibra Óptica Pura (FTTH)',
+                        'Instalação Gratuita com Agendamento',
+                        'Sem Franquia de Consumo',
+                        'Suporte Técnico Local em Camilos',
+                      ],
+                      tag: '2 ROTEADORES INCLUSOS',
+                    });
                     contentScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
@@ -2943,6 +2879,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onClick={() => {
                     setIsAddingPlan(true);
                     setEditingPlan(null);
+                    setNewPlanForm({
+                      name: '',
+                      speed: 500,
+                      speedUnit: 'MEGA',
+                      price: '90',
+                      cents: ',00',
+                      routerCount: 2,
+                      category: 'residencial',
+                      description: 'Conexão 100% fibra óptica com ultraestabilidade.',
+                      equipment: '2 Roteadores Wi-Fi inclusos (Comodato gratuito)',
+                      idealFor: 'Toda a família',
+                      features: [
+                        'Velocidade Real Simétrica',
+                        '2 Roteadores Wi-Fi Inclusos',
+                        '100% Fibra Óptica Pura (FTTH)',
+                        'Instalação Gratuita com Agendamento',
+                        'Sem Franquia de Consumo',
+                        'Suporte Técnico Local em Camilos',
+                      ],
+                      tag: '2 ROTEADORES INCLUSOS',
+                    });
                     contentScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-neutral-950 text-xs font-bold uppercase rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
@@ -3117,6 +3074,119 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       />
                     </div>
 
+                    {/* Features / Informações sobre o Plano (Exibidas com ícone de check nos cards) */}
+                    <div className="sm:col-span-3 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-neutral-800">
+                        <div>
+                          <label className="text-white font-bold text-xs flex items-center gap-2">
+                            <Check className="w-4 h-4 text-cyan-400" />
+                            <span>Informações & Benefícios do Plano (Itens com Check nos Cards do Site)</span>
+                          </label>
+                          <p className="text-[11px] text-neutral-400 mt-0.5">
+                            Adicione, edite ou remova os tópicos e diferenciais que aparecem na lista deste plano no site.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editingPlan) {
+                              const curr = editingPlan.features || [];
+                              setEditingPlan({ ...editingPlan, features: [...curr, ''] });
+                            } else {
+                              const curr = newPlanForm.features || [];
+                              setNewPlanForm({ ...newPlanForm, features: [...curr, ''] });
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-800/80 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto active:scale-95 transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Adicionar Informação</span>
+                        </button>
+                      </div>
+
+                      {/* Dynamic items list */}
+                      <div className="space-y-2">
+                        {((editingPlan ? editingPlan.features : newPlanForm.features) || []).map((feature, fIdx) => (
+                          <div key={fIdx} className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-md bg-cyan-400/10 text-cyan-400 flex items-center justify-center shrink-0 text-xs font-mono">
+                              <Check className="w-3.5 h-3.5" />
+                            </span>
+                            <input
+                              type="text"
+                              value={feature}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (editingPlan) {
+                                  const updated = [...(editingPlan.features || [])];
+                                  updated[fIdx] = val;
+                                  setEditingPlan({ ...editingPlan, features: updated });
+                                } else {
+                                  const updated = [...(newPlanForm.features || [])];
+                                  updated[fIdx] = val;
+                                  setNewPlanForm({ ...newPlanForm, features: updated });
+                                }
+                              }}
+                              placeholder={`Ex: ${
+                                fIdx === 0
+                                  ? '100% Fibra Óptica até o Roteador (FTTH)'
+                                  : fIdx === 1
+                                  ? 'Instalação Gratuita com Agendamento'
+                                  : 'Sem Franquia de Dados - Consumo Ilimitado'
+                              }`}
+                              className="flex-1 bg-neutral-900 border border-neutral-700/80 rounded-lg p-2.5 text-white text-xs placeholder-neutral-500 focus:border-cyan-400 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (editingPlan) {
+                                  const updated = (editingPlan.features || []).filter((_, i) => i !== fIdx);
+                                  setEditingPlan({ ...editingPlan, features: updated });
+                                } else {
+                                  const updated = (newPlanForm.features || []).filter((_, i) => i !== fIdx);
+                                  setNewPlanForm({ ...newPlanForm, features: updated });
+                                }
+                              }}
+                              className="p-2 text-neutral-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                              title="Remover esta informação"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+
+                        {((editingPlan ? editingPlan.features : newPlanForm.features) || []).length === 0 && (
+                          <div className="p-4 rounded-lg border border-dashed border-neutral-800 text-center text-xs text-neutral-500">
+                            Nenhuma informação adicionada ainda. Clique em "Adicionar Informação" para inserir os pontos do plano.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quick Bulk Restore / Actions */}
+                      <div className="pt-2 border-t border-neutral-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-neutral-500">
+                        <span>Cada informação adicionada terá um ícone de verificado (check) no card do plano.</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const defaultFeatures = [
+                              'Velocidade Real Simétrica',
+                              '100% Fibra Óptica Pura (FTTH)',
+                              'Instalação Gratuita com Agendamento',
+                              'Sem Franquia de Consumo Mensal',
+                              'Suporte Técnico Humanizado em Camilos',
+                            ];
+                            if (editingPlan) {
+                              setEditingPlan({ ...editingPlan, features: defaultFeatures });
+                            } else {
+                              setNewPlanForm({ ...newPlanForm, features: defaultFeatures });
+                            }
+                          }}
+                          className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 cursor-pointer font-medium self-start sm:self-auto"
+                        >
+                          Restaurar lista de exemplo
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="sm:col-span-3 flex justify-end gap-2 pt-3 border-t border-neutral-800">
                       <button
                         type="button"
@@ -3165,6 +3235,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <span className="font-bold text-white">{p.routerCount || 1} Roteador(es)</span>
                         <p className="text-[11px] text-neutral-400 mt-0.5">{p.equipment}</p>
                       </div>
+
+                      {p.features && p.features.length > 0 && (
+                        <div className="p-2.5 rounded-lg bg-neutral-950/70 border border-neutral-800/80 space-y-1.5">
+                          <span className="text-[10px] uppercase font-bold text-cyan-400 block tracking-wider flex items-center justify-between">
+                            <span>Informações ({p.features.length})</span>
+                            <span className="text-neutral-500 font-normal">Check no card</span>
+                          </span>
+                          <div className="space-y-1">
+                            {p.features.slice(0, 3).map((f, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-[11px] text-neutral-300 truncate">
+                                <Check className="w-3 h-3 text-cyan-400 shrink-0" />
+                                <span className="truncate">{f}</span>
+                              </div>
+                            ))}
+                            {p.features.length > 3 && (
+                              <span className="text-[10px] text-neutral-500 font-mono pl-4 block">
+                                + {p.features.length - 3} itens a mais...
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-neutral-800/80">

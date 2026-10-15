@@ -32,18 +32,18 @@ export const FaqSection: React.FC<FaqSectionProps> = ({
   const whatsappUrl = `https://wa.me/${rawPhone}`;
 
   return (
-    <section className="py-20 bg-neutral-950 border-b border-neutral-900 scroll-mt-12">
+    <section className="py-12 sm:py-16 md:py-20 bg-neutral-950 border-b border-neutral-900 scroll-mt-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center mb-14">
-          <div className="text-xs font-semibold text-cyan-400 tracking-wider uppercase mb-2">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="text-xs font-semibold text-cyan-400 tracking-wider uppercase mb-1.5">
             {badgeText}
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
             {titleText}
           </h2>
-          <p className="mt-3 text-sm text-neutral-400">
+          <p className="mt-3 text-sm sm:text-base text-neutral-400">
             {subtitleText}
           </p>
         </div>

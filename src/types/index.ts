@@ -113,7 +113,7 @@ export interface FrontendContent {
     statUptime: string;
   };
   plansSection: {
-    badge: string;
+    badge?: string;
     title: string;
     subtitle: string;
   };

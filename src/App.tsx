@@ -25,10 +25,19 @@ import { InstagramFeed } from './components/InstagramFeed';
 import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
-import { ContractModal } from './components/ContractModal';
-import { AdminPanel } from './components/AdminPanel';
-import { AdminLoginModal } from './components/AdminLoginModal';
-import { LegalModal } from './components/LegalModal';
+// Code-split modals and AdminPanel for lightning-fast client page load
+const ContractModal = React.lazy(() =>
+  import('./components/ContractModal').then((m) => ({ default: m.ContractModal }))
+);
+const LegalModal = React.lazy(() =>
+  import('./components/LegalModal').then((m) => ({ default: m.LegalModal }))
+);
+const AdminLoginModal = React.lazy(() =>
+  import('./components/AdminLoginModal').then((m) => ({ default: m.AdminLoginModal }))
+);
+const AdminPanel = React.lazy(() =>
+  import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel }))
+);
 
 export default function App() {
   // App state
@@ -178,50 +187,66 @@ export default function App() {
       <FloatingWhatsApp settings={settings} />
 
       {/* Online Express Contract Modal */}
-      <ContractModal
-        isOpen={isContractOpen}
-        initialPlan={selectedPlanForContract}
-        availablePlans={plans}
-        dueDates={dueDates}
-        onClose={() => setIsContractOpen(false)}
-        onOrderCreated={() => setLeads(getStoredLeads())}
-        onOpenLegal={handleOpenLegal}
-      />
+      {isContractOpen && (
+        <React.Suspense fallback={null}>
+          <ContractModal
+            isOpen={isContractOpen}
+            initialPlan={selectedPlanForContract}
+            availablePlans={plans}
+            dueDates={dueDates}
+            onClose={() => setIsContractOpen(false)}
+            onOrderCreated={() => setLeads(getStoredLeads())}
+            onOpenLegal={handleOpenLegal}
+          />
+        </React.Suspense>
+      )}
 
       {/* Transparency & Legal Modal (LGPD & SCM Terms) */}
-      <LegalModal
-        isOpen={isLegalModalOpen}
-        initialTab={legalModalTab}
-        onClose={() => setIsLegalModalOpen(false)}
-      />
+      {isLegalModalOpen && (
+        <React.Suspense fallback={null}>
+          <LegalModal
+            isOpen={isLegalModalOpen}
+            initialTab={legalModalTab}
+            onClose={() => setIsLegalModalOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Admin Login Modal */}
-      <AdminLoginModal
-        isOpen={isAdminLoginOpen}
-        onClose={() => setIsAdminLoginOpen(false)}
-        onSuccess={handleLoginSuccess}
-      />
+      {isAdminLoginOpen && (
+        <React.Suspense fallback={null}>
+          <AdminLoginModal
+            isOpen={isAdminLoginOpen}
+            onClose={() => setIsAdminLoginOpen(false)}
+            onSuccess={handleLoginSuccess}
+          />
+        </React.Suspense>
+      )}
 
       {/* Admin Management Panel */}
-      <AdminPanel
-        key={isAdminPanelOpen ? 'admin-open' : 'admin-closed'}
-        isOpen={isAdminPanelOpen}
-        onClose={() => setIsAdminPanelOpen(false)}
-        plans={plans}
-        onUpdatePlans={(updated) => setPlans(updated)}
-        tools={tools}
-        onUpdateTools={(updated) => setTools(updated)}
-        dueDates={dueDates}
-        onUpdateDueDates={(updated) => setDueDates(updated)}
-        coverage={coverage}
-        onUpdateCoverage={(updated) => setCoverage(updated)}
-        leads={leads}
-        onUpdateLeads={(updated) => setLeads(updated)}
-        settings={settings}
-        onUpdateSettings={(updated) => setSettings(updated)}
-        frontendContent={frontendContent}
-        onUpdateFrontendContent={(updated) => setFrontendContent(updated)}
-      />
+      {isAdminPanelOpen && (
+        <React.Suspense fallback={null}>
+          <AdminPanel
+            key="admin-open"
+            isOpen={isAdminPanelOpen}
+            onClose={() => setIsAdminPanelOpen(false)}
+            plans={plans}
+            onUpdatePlans={(updated) => setPlans(updated)}
+            tools={tools}
+            onUpdateTools={(updated) => setTools(updated)}
+            dueDates={dueDates}
+            onUpdateDueDates={(updated) => setDueDates(updated)}
+            coverage={coverage}
+            onUpdateCoverage={(updated) => setCoverage(updated)}
+            leads={leads}
+            onUpdateLeads={(updated) => setLeads(updated)}
+            settings={settings}
+            onUpdateSettings={(updated) => setSettings(updated)}
+            frontendContent={frontendContent}
+            onUpdateFrontendContent={(updated) => setFrontendContent(updated)}
+          />
+        </React.Suspense>
+      )}
 
     </div>
   );

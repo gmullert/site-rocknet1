@@ -30,9 +30,9 @@ export const Footer: React.FC<FooterProps> = ({
   const logoAccent = settings.logoTextAccent || 'net';
 
   return (
-    <footer className="bg-neutral-950 text-neutral-400 border-t border-neutral-900 pt-16 pb-12 text-xs">
+    <footer className="bg-neutral-950 text-neutral-400 border-t border-neutral-900 pt-12 pb-10 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-neutral-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-neutral-900">
           
           {/* Col 1: Brand & Bio */}
           <div className="lg:col-span-2 space-y-4">

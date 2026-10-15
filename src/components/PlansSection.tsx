@@ -16,7 +16,6 @@ export const PlansSection: React.FC<PlansSectionProps> = ({ plans, onSelectPlan,
   const [peopleCount, setPeopleCount] = useState<number>(3);
   const [heavyUsage, setHeavyUsage] = useState<boolean>(true);
 
-  const badgeText = content?.badge || 'Planos de Fibra Óptica em Camilos';
   const titleText = content?.title || 'Escolha a velocidade ideal para a sua casa ou empresa.';
   const subtitleText = content?.subtitle || 'Conexão 100% fibra óptica com roteadores inclusos para máxima cobertura em todos os cômodos e suporte humanizado local.';
 
@@ -38,26 +37,23 @@ export const PlansSection: React.FC<PlansSectionProps> = ({ plans, onSelectPlan,
   const recommendedPlan = getRecommendedPlan();
 
   return (
-    <section id="planos" className="py-20 bg-neutral-950 border-b border-neutral-900 scroll-mt-12">
+    <section id="planos" className="py-12 sm:py-16 md:py-20 bg-neutral-950 border-b border-neutral-900 scroll-mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="text-xs font-semibold text-cyan-400 tracking-wider uppercase mb-2">
-            {badgeText}
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight font-display text-balance">
             {titleText}
           </h2>
-          <p className="mt-4 text-base text-neutral-400">
+          <p className="mt-3 text-sm sm:text-base text-neutral-400">
             {subtitleText}
           </p>
 
-          {/* Interactive filter tabs (functional buttons) */}
-          <div className="mt-8 inline-flex p-1.5 bg-neutral-900 border border-neutral-800 rounded-xl">
+          {/* Interactive filter tabs (functional buttons) with responsive wrap */}
+          <div className="mt-6 flex flex-wrap justify-center gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 rounded-2xl max-w-full">
             <button
               onClick={() => setSelectedFilter('all')}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 selectedFilter === 'all'
                   ? 'bg-cyan-400 text-neutral-950 shadow-sm'
                   : 'text-neutral-400 hover:text-white'
@@ -67,7 +63,7 @@ export const PlansSection: React.FC<PlansSectionProps> = ({ plans, onSelectPlan,
             </button>
             <button
               onClick={() => setSelectedFilter('residencial')}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 selectedFilter === 'residencial'
                   ? 'bg-cyan-400 text-neutral-950 shadow-sm'
                   : 'text-neutral-400 hover:text-white'
@@ -77,7 +73,7 @@ export const PlansSection: React.FC<PlansSectionProps> = ({ plans, onSelectPlan,
             </button>
             <button
               onClick={() => setSelectedFilter('gamer')}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 selectedFilter === 'gamer'
                   ? 'bg-cyan-400 text-neutral-950 shadow-sm'
                   : 'text-neutral-400 hover:text-white'
@@ -87,7 +83,7 @@ export const PlansSection: React.FC<PlansSectionProps> = ({ plans, onSelectPlan,
             </button>
             <button
               onClick={() => setSelectedFilter('empresarial')}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 selectedFilter === 'empresarial'
                   ? 'bg-cyan-400 text-neutral-950 shadow-sm'
                   : 'text-neutral-400 hover:text-white'
