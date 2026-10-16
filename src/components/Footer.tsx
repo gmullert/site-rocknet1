@@ -112,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <a href="#instagram" className="hover:text-cyan-400 transition-colors">
-                  Instagram @rocknet_camilos
+                  Instagram {settings.instagramHandle || '@rocknet_camilos'}
                 </a>
               </li>
             </ul>
@@ -121,7 +121,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 3: Contact info */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Atendimento Camilos
+              Atendimento {settings.city || 'Camilos'}
             </h4>
             <ul className="space-y-2">
               <li>
@@ -141,8 +141,19 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <span className="text-neutral-500 block">Cidade Base:</span>
-                <span className="text-neutral-300">Camilos - Ceará</span>
+                <span className="text-neutral-300">{settings.city || 'Camilos - Ceará'}</span>
               </li>
+              {content?.email && (
+                <li>
+                  <span className="text-neutral-500 block">E-mail:</span>
+                  <a
+                    href={`mailto:${content.email}`}
+                    className="text-neutral-300 hover:text-cyan-400 transition-colors"
+                  >
+                    {content.email}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
 

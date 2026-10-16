@@ -4,6 +4,8 @@ import { ROCKNET_INFO } from '../data/content';
 import { addLeadOrder } from '../services/storage';
 import { X, CheckCircle, ShieldCheck, ArrowRight, ArrowLeft, Send, Copy, Check, Clock, User, MapPin, Calendar } from 'lucide-react';
 
+import { SiteSettings } from '../services/storage';
+
 interface ContractModalProps {
   isOpen: boolean;
   initialPlan?: Plan | null;
@@ -12,6 +14,7 @@ interface ContractModalProps {
   onClose: () => void;
   onOrderCreated?: () => void;
   onOpenLegal?: (tab?: 'privacy' | 'terms') => void;
+  settings?: SiteSettings;
 }
 
 export const ContractModal: React.FC<ContractModalProps> = ({
@@ -22,6 +25,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   onClose,
   onOrderCreated,
   onOpenLegal,
+  settings,
 }) => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [step, setStep] = useState<number>(1);
@@ -130,6 +134,9 @@ export const ContractModal: React.FC<ContractModalProps> = ({
     setGeneratedProtocol(createdLead.protocol);
     if (onOrderCreated) onOrderCreated();
 
+    const targetPhone = settings?.phoneRaw || ROCKNET_INFO.phoneRaw;
+    const targetCity = settings?.city || 'Camilos';
+
     // Prepare WhatsApp text
     const waText = `🚀 *NOVA CONTRATAÇÃO ONLINE - ROCKNET FIBRA*
 ----------------------------------------
@@ -142,7 +149,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
 • *WhatsApp:* ${phone}
 ${cpf ? `• *CPF:* ${cpf}` : ''}
 
-📍 *Endereço de Instalação (Camilos):*
+📍 *Endereço de Instalação (${targetCity}):*
 • *Rua/Av:* ${street}, Nº ${number}
 • *Bairro:* ${neighborhood}
 ${reference ? `• *Ponto de Ref:* ${reference}` : ''}
@@ -155,7 +162,7 @@ ${notes ? `• *Observações:* ${notes}` : ''}
 _Gostaria de confirmar o agendamento da instalação pelo site da Rocknet!_`;
 
     const encoded = encodeURIComponent(waText);
-    const waUrl = `https://wa.me/${ROCKNET_INFO.phoneRaw}?text=${encoded}`;
+    const waUrl = `https://wa.me/${targetPhone}?text=${encoded}`;
 
     // Open WhatsApp in a new tab
     window.open(waUrl, '_blank', 'noopener,noreferrer');

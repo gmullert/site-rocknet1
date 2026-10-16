@@ -142,6 +142,7 @@ export default function App() {
           content={frontendContent.toolsSection}
           onOpenContract={() => handleOpenContract()}
           phoneRaw={settings.phoneRaw}
+          settings={settings}
         />
 
         {/* Coverage Area Checker in Camilos */}
@@ -163,6 +164,7 @@ export default function App() {
           instagramHandle={settings.instagramHandle}
           content={frontendContent.instagramSection}
           posts={frontendContent.instagramPosts}
+          settings={settings}
         />
 
         {/* Frequently Asked Questions */}
@@ -171,6 +173,7 @@ export default function App() {
           content={frontendContent.faq}
           phoneDisplay={settings.phoneDisplay}
           phoneRaw={settings.phoneRaw}
+          settings={settings}
         />
       </main>
 
@@ -194,6 +197,7 @@ export default function App() {
             initialPlan={selectedPlanForContract}
             availablePlans={plans}
             dueDates={dueDates}
+            settings={settings}
             onClose={() => setIsContractOpen(false)}
             onOrderCreated={() => setLeads(getStoredLeads())}
             onOpenLegal={handleOpenLegal}

@@ -3,11 +3,14 @@ import { FAQS, ROCKNET_INFO } from '../data/content';
 import { FaqItem, FrontendContent } from '../types';
 import { ChevronDown, MessageSquare } from 'lucide-react';
 
+import { SiteSettings } from '../services/storage';
+
 interface FaqSectionProps {
   faqs?: FaqItem[];
   content?: FrontendContent['faq'];
   phoneDisplay?: string;
   phoneRaw?: string;
+  settings?: SiteSettings;
 }
 
 export const FaqSection: React.FC<FaqSectionProps> = ({ 
@@ -15,6 +18,7 @@ export const FaqSection: React.FC<FaqSectionProps> = ({
   content,
   phoneDisplay,
   phoneRaw,
+  settings,
 }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
@@ -27,8 +31,8 @@ export const FaqSection: React.FC<FaqSectionProps> = ({
   const subtitleText = content?.subtitle || 'Tudo o que você precisa saber sobre a nossa rede de fibra óptica e contratação.';
   
   const activeFaqs = faqs && faqs.length > 0 ? faqs : FAQS.map((f, i) => ({ id: `faq-${i + 1}`, ...f }));
-  const displayPhone = phoneDisplay || ROCKNET_INFO.phoneDisplay;
-  const rawPhone = phoneRaw || ROCKNET_INFO.phoneRaw;
+  const displayPhone = phoneDisplay || settings?.phoneDisplay || ROCKNET_INFO.phoneDisplay;
+  const rawPhone = phoneRaw || settings?.phoneRaw || ROCKNET_INFO.phoneRaw;
   const whatsappUrl = `https://wa.me/${rawPhone}`;
 
   return (

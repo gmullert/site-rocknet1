@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+.gitignore
+.aistudio
+README.md
+test_edit_user.ts
+*.log

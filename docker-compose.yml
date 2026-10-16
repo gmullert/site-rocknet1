@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  rocknet-site:
+    build: .
+    container_name: rocknet-site
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Volume persistente para não perder imagens enviadas pelo painel (fotos e favicons)
+      - rocknet_public_data:/app/public
+
+volumes:
+  rocknet_public_data:

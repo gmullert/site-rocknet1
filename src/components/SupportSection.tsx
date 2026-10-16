@@ -21,7 +21,11 @@ export const SupportSection: React.FC<SupportSectionProps> = ({ content, setting
   const card1Title = content?.card1Title || 'Atendimento Humanizado';
   const card1Desc = content?.card1Desc || 'Conversas reais pelo WhatsApp com técnicos especializados residentes em Camilos.';
   const card2Title = content?.card2Title || 'Plantão & Visita Técnica';
-  const card2Desc = content?.card2Desc || (settings?.workHours ? `Atendimento: ${settings.workHours}` : 'Atendimento de Segunda a Sábado das 07:30 às 18:00 e plantão técnico estendido até as 21:00.');
+  const card2Desc = content?.card2Desc || (
+    settings?.workHours
+      ? `Atendimento: ${settings.workHours}${settings.supportHours ? ` (${settings.supportHours})` : ''}.`
+      : 'Atendimento de Segunda a Sábado das 07:30 às 18:00 e plantão técnico estendido até as 21:00.'
+  );
   const card3Title = content?.card3Title || 'Monitoramento Ativo de Rede';
   const card3Desc = content?.card3Desc || 'Nossos switches e concentradores ópticos são monitorados 24 horas para prevenir falhas.';
   const card4Title = content?.card4Title || '2ª Via & Financeiro Rápido';
